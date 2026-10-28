@@ -1,0 +1,26 @@
+{
+  "name": "tickets-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Serviço de chamados simulado (o 'sistema legado' do service desk da Nexo).",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
+    "start": "tsx --env-file-if-exists=.env src/index.ts",
+    "seed": "tsx --env-file-if-exists=.env src/db/reset.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.0",
+    "@libsql/client": "^0.15.0",
+    "hono": "^4.9.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

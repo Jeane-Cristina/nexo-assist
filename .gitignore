@@ -1,0 +1,21 @@
+node_modules/
+.next/
+dist/
+coverage/
+.vercel/
+.turbo/
+
+# bancos locais (SQLite)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+data/
+
+# variáveis de ambiente (nunca commitar chaves)
+.env
+.env.local
+.env.*.local
+
+.DS_Store
+*.log
