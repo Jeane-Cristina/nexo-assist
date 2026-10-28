@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   }
 
   const store = await cookies();
-  store.set(SESSION_COOKIE, encodeSession({ email: employee.email, name: employee.name, role: employee.role }, env().SESSION_SECRET), {
+  store.set(SESSION_COOKIE, encodeSession({ email: employee.email, name: employee.name, role: employee.role, department: employee.department }, env().SESSION_SECRET), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

@@ -163,6 +163,8 @@ export const Card = z.discriminatedUnion("kind", [
 export type Card = z.infer<typeof Card>;
 
 export const MessageMeta = z.object({
+  /** Área de quem escreveu (ex.: "Suporte N2"), para mensagens de analista. */
+  authorTitle: z.string().optional(),
   steps: z.array(Step).optional(),
   decision: Decision.optional(),
   cards: z.array(Card).optional(),

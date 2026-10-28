@@ -17,6 +17,8 @@ export const Session = z.object({
   email: z.string(),
   name: z.string(),
   role: z.enum(["employee", "analyst"]),
+  /** Área (ex.: "Suporte N2") — aparece ao lado do nome do analista nas mensagens. */
+  department: z.string().optional(),
   /** Expiração em segundos desde a época. */
   exp: z.number(),
 });
