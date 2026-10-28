@@ -1,0 +1,25 @@
+import { z } from "zod";
+
+const EnvSchema = z.object({
+  LLM_MODEL: z.string().regex(/^[a-z0-9-]+\/.+$/, "use o formato provedor/modelo").default("google/gemini-2.5-flash"),
+  TICKETS_SERVICE_URL: z.string().url().default("http://localhost:4000"),
+  SERVICE_TOKEN: z.string().min(16, "SERVICE_TOKEN precisa ter pelo menos 16 caracteres"),
+  APP_DB_URL: z.string().default("file:./data/app.db"),
+  APP_DB_AUTH_TOKEN: z.string().optional(),
+});
+
+export type Env = z.infer<typeof EnvSchema>;
+
+let cached: Env | undefined;
+
+/** Lê e valida as variáveis uma vez; erro claro se faltar algo. */
+export function env(): Env {
+  if (cached) return cached;
+  const parsed = EnvSchema.safeParse(process.env);
+  if (!parsed.success) {
+    const problems = parsed.error.issues.map((i) => `- ${i.path.join(".")}: ${i.message}`).join("\n");
+    throw new Error(`Configuração inválida do app web:\n${problems}\nVeja apps/web/.env.example`);
+  }
+  cached = parsed.data;
+  return cached;
+}
