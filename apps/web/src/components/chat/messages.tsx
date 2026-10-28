@@ -52,7 +52,9 @@ export function ChatMessage({
         <div className="flex flex-col gap-1.5">
           <p className="text-[12.5px]">
             <span className="font-semibold">{message.authorName ?? "Analista"}</span>
-            <span className="ml-2 rounded-md bg-success-tint px-1.5 py-px text-[11px] font-semibold text-success-ink">Analista</span>
+            <span className="ml-2 rounded-md bg-success-tint px-1.5 py-px text-[11px] font-semibold text-success-ink">
+              {message.meta.authorTitle ?? "Analista"}
+            </span>
           </p>
           <p className="max-w-[600px] rounded-[4px_12px_12px_12px] bg-human-bubble px-4 py-3 text-[14.5px] leading-[22px] whitespace-pre-wrap">
             {message.content}

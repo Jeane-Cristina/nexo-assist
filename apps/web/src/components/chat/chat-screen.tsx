@@ -31,6 +31,7 @@ export function ChatScreen({ initial }: { initial: ChatSnapshot }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const paused = conversation.status === "aguardando_atendente" || conversation.status === "em_atendimento";
+  const closed = conversation.status === "encerrada";
   const limitReached = conversation.employeeMessageCount >= MAX_EMPLOYEE_MESSAGES;
 
   useEffect(() => {
@@ -42,11 +43,9 @@ export function ChatScreen({ initial }: { initial: ChatSnapshot }) {
     if (!paused) return;
     const timer = setInterval(async () => {
       try {
-        const snap = await api<ChatSnapshot>("/api/chat");
-        if (snap.conversation.id === conversation.id || snap.conversation.status !== "encerrada") {
-          setConversation(snap.conversation);
-          setMessages(snap.messages);
-        }
+        const snap = await api<ChatSnapshot>(`/api/chat?conversationId=${conversation.id}`);
+        setConversation(snap.conversation);
+        setMessages(snap.messages);
       } catch {
         /* tenta de novo no próximo ciclo */
       }
@@ -130,7 +129,7 @@ export function ChatScreen({ initial }: { initial: ChatSnapshot }) {
     <>
       <TopBar here="Atendimento">
         <StatusPill conversation={conversation} />
-        {!paused && messages.length > 0 && (
+        {!paused && !closed && messages.length > 0 && (
           <button
             onClick={newConversation}
             disabled={busy}
@@ -159,6 +158,14 @@ export function ChatScreen({ initial }: { initial: ChatSnapshot }) {
             </>
           )}
           {paused && !pendingText && <PausedNotice conversation={conversation} />}
+          {closed && (
+            <div className="flex items-center gap-3 rounded-lg bg-surface px-3.5 py-3 text-[13.5px] text-body">
+              Este atendimento foi encerrado.
+              <button onClick={newConversation} disabled={busy} className="ml-auto rounded-lg bg-primary px-3 py-1.5 font-semibold text-white">
+                Começar nova conversa
+              </button>
+            </div>
+          )}
           <div ref={bottomRef} />
         </div>
       </div>
@@ -187,13 +194,13 @@ export function ChatScreen({ initial }: { initial: ChatSnapshot }) {
             }}
             rows={1}
             maxLength={2000}
-            disabled={limitReached}
-            placeholder={limitReached ? "Limite de mensagens atingido" : paused ? "Escreva para o analista…" : "Escreva para o Nexo…"}
+            disabled={limitReached || closed}
+            placeholder={closed ? "Atendimento encerrado" : limitReached ? "Limite de mensagens atingido" : paused ? "Escreva para o analista…" : "Escreva para o Nexo…"}
             className="max-h-40 flex-1 resize-none self-center bg-transparent py-1.5 text-[14.5px] outline-none placeholder:text-muted disabled:cursor-not-allowed"
           />
           <button
             type="submit"
-            disabled={busy || !draft.trim() || limitReached}
+            disabled={busy || !draft.trim() || limitReached || closed}
             className="flex h-9 items-center gap-1.5 rounded-md bg-primary px-3 text-[13.5px] font-semibold text-white disabled:opacity-50"
           >
             <ArrowUp className="size-4" />

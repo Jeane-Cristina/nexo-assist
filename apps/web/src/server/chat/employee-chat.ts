@@ -46,11 +46,18 @@ async function employeeOf(deps: ChatDeps, session: Session): Promise<Employee> {
   }
 }
 
-/** Abre a conversa em andamento (ou começa uma) — é o "voltar outro dia e continuar". */
-export async function loadChat(deps: ChatDeps, session: Session): Promise<ChatSnapshot> {
+/**
+ * Abre a conversa em andamento (ou começa uma) — é o "voltar outro dia e continuar".
+ * Com `conversationId` (usado no polling), devolve aquela conversa, mesmo encerrada,
+ * para a tela mostrar o encerramento em vez de trocar de conversa sozinha.
+ */
+export async function loadChat(deps: ChatDeps, session: Session, conversationId?: string): Promise<ChatSnapshot> {
   const employee = await employeeOf(deps, session);
+  const requested = conversationId ? await deps.store.get(conversationId) : null;
   const conversation =
-    (await deps.store.findActiveForEmployee(session.email)) ?? (await deps.store.create({ email: session.email, name: employee.name }));
+    (requested && requested.employeeEmail === session.email ? requested : null) ??
+    (await deps.store.findActiveForEmployee(session.email)) ??
+    (await deps.store.create({ email: session.email, name: employee.name }));
   const messages = await deps.store.listMessages(conversation.id);
   return { employee, conversation, messages };
 }
