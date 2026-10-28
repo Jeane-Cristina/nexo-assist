@@ -12,6 +12,8 @@ import { z } from "zod";
 
 export const SESSION_COOKIE = "nexo_session";
 export const SESSION_TTL_SECONDS = 60 * 60 * 12; // um expediente
+/** "Manter conectado neste computador". */
+export const REMEMBER_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 export const Session = z.object({
   email: z.string(),
@@ -26,8 +28,13 @@ export type Session = z.infer<typeof Session>;
 
 const sign = (payload: string, secret: string): string => createHmac("sha256", secret).update(payload).digest("base64url");
 
-export function encodeSession(data: Omit<Session, "exp">, secret: string, now: Date = new Date()): string {
-  const session: Session = { ...data, exp: Math.floor(now.getTime() / 1000) + SESSION_TTL_SECONDS };
+export function encodeSession(
+  data: Omit<Session, "exp">,
+  secret: string,
+  now: Date = new Date(),
+  ttlSeconds: number = SESSION_TTL_SECONDS,
+): string {
+  const session: Session = { ...data, exp: Math.floor(now.getTime() / 1000) + ttlSeconds };
   const payload = Buffer.from(JSON.stringify(session)).toString("base64url");
   return `${payload}.${sign(payload, secret)}`;
 }

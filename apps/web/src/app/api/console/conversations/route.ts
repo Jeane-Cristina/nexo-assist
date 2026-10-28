@@ -2,6 +2,7 @@ import { sessionOrError } from "@/server/auth/current";
 import { CONSOLE_FILTERS, listConversations, type ConsoleFilter } from "@/server/chat/analyst-console";
 import { getContainer } from "@/server/container";
 import { errorResponse } from "@/server/http/respond";
+import { touchPresence } from "@/server/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,9 @@ export async function GET(req: Request) {
   const raw = params.get("filter") ?? "para_voce";
   const filter: ConsoleFilter = (CONSOLE_FILTERS as readonly string[]).includes(raw) ? (raw as ConsoleFilter) : "para_voce";
   try {
-    return Response.json(await listConversations(await getContainer(), auth.session, { filter, query: params.get("q") ?? undefined }));
+    const container = await getContainer();
+    await touchPresence(container.db, auth.session.email);
+    return Response.json(await listConversations(container, auth.session, { filter, query: params.get("q") ?? undefined }));
   } catch (err) {
     return errorResponse(err);
   }

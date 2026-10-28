@@ -103,6 +103,7 @@ export async function createTestEnv(opts: { legacyDown?: boolean } = {}) {
   const desk = new ServiceDesk(tickets, store, clock);
 
   return {
+    appDb,
     tickets,
     store,
     desk,

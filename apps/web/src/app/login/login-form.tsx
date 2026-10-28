@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { ArrowRight, Check, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -9,6 +9,7 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +21,7 @@ export function LoginForm() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, remember }),
       });
       const data = (await res.json()) as { redirect?: string; error?: string };
       if (!res.ok || !data.redirect) throw new Error(data.error ?? "Não foi possível entrar.");
@@ -56,7 +57,7 @@ export function LoginForm() {
           <span className="text-link">Esqueci minha senha</span>
         </span>
         <span className="flex h-11 items-center gap-2.5 rounded-lg border border-line bg-white pr-2 pl-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15">
-          <Lock className="size-4 text-muted" aria-hidden />
+          <LockKeyhole className="size-4 text-muted" aria-hidden />
           <input
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
@@ -76,6 +77,14 @@ export function LoginForm() {
         </span>
       </label>
 
+      <label className="flex w-fit cursor-pointer items-center gap-[9px] pt-0.5 text-[13.5px] text-body">
+        <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="peer sr-only" />
+        <span className="grid size-[18px] place-items-center rounded-md border border-line bg-white peer-checked:border-primary peer-checked:bg-primary peer-focus-visible:ring-3 peer-focus-visible:ring-primary/20">
+          {remember && <Check className="size-3 text-white" strokeWidth={3} />}
+        </span>
+        Manter conectado neste computador
+      </label>
+
       {error && (
         <p role="alert" className="rounded-lg bg-danger-tint px-3 py-2 text-[13.5px] text-danger-ink">
           {error}
@@ -90,6 +99,7 @@ export function LoginForm() {
         {loading ? "Entrando…" : "Entrar"}
         {!loading && <ArrowRight className="size-4" />}
       </button>
+      <hr className="mt-1 border-line" />
     </form>
   );
 }

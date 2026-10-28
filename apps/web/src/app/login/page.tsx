@@ -1,12 +1,15 @@
 import { redirect } from "next/navigation";
 import { NexoMark } from "@/components/nexo-mark";
 import { getSession, homeFor } from "@/server/auth/current";
+import { getContainer } from "@/server/container";
+import { getStats, type ServiceDeskStats } from "@/server/stats";
 import { LoginForm } from "./login-form";
 
 /** Tela 1 do protótipo: apresentação do Nexo Assist à esquerda, formulário à direita. */
 export default async function LoginPage() {
   const session = await getSession();
   if (session) redirect(homeFor(session.role));
+  const stats = await loadStats();
 
   return (
     <main className="flex min-h-screen">
@@ -52,9 +55,7 @@ export default async function LoginPage() {
           </div>
         </div>
 
-        <p className="text-[13.5px] text-white/55">
-          Seg a sex, 8h às 18h · chamados críticos com plantão 24h
-        </p>
+        <Stats stats={stats} />
       </section>
 
       <section className="flex flex-1 flex-col justify-between px-14 py-10">
@@ -80,5 +81,37 @@ export default async function LoginPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+async function loadStats(): Promise<ServiceDeskStats | null> {
+  try {
+    return await getStats((await getContainer()).db);
+  } catch {
+    return null; // a tela de login nunca deve quebrar por causa das métricas
+  }
+}
+
+const formatSeconds = (s: number): string => (s < 60 ? `${Math.max(1, Math.round(s))} s` : `${Math.round(s / 60)} min`);
+
+/** Métricas do rodapé, como no protótipo — mas calculadas dos dados reais. */
+function Stats({ stats }: { stats: ServiceDeskStats | null }) {
+  const items: { value: string; label: string; live?: boolean }[] = [
+    { value: stats?.avgFirstResponseSeconds != null ? formatSeconds(stats.avgFirstResponseSeconds) : "—", label: "primeira resposta, em média" },
+    { value: stats?.resolvedWithoutQueuePct != null ? `${stats.resolvedWithoutQueuePct}%` : "—", label: "resolvidos sem fila" },
+    { value: String(stats?.analystsOnline ?? 0), label: "analistas online agora", live: (stats?.analystsOnline ?? 0) > 0 },
+  ];
+  return (
+    <div className="flex max-w-[672px] border-t border-white/10 pt-6">
+      {items.map((it, i) => (
+        <div key={it.label} className={`flex flex-1 flex-col gap-1.5 ${i > 0 ? "border-l border-white/10 pl-6" : ""}`}>
+          <span className="flex items-center gap-2 font-serif text-[34px] leading-none">
+            {it.value}
+            {it.live && <span className="size-2 rounded-full bg-success" />}
+          </span>
+          <span className="text-[13.5px] text-white/55">{it.label}</span>
+        </div>
+      ))}
+    </div>
   );
 }

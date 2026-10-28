@@ -37,6 +37,11 @@ export async function migrateAppDb(db: Client): Promise<void> {
         created_at TEXT NOT NULL
       )`,
       `CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id, seq)`,
+      // Presença dos analistas (atualizada pelo console a cada poucos segundos).
+      `CREATE TABLE IF NOT EXISTS analyst_presence (
+        email TEXT PRIMARY KEY,
+        last_seen TEXT NOT NULL
+      )`,
     ],
     "write",
   );
