@@ -107,7 +107,14 @@ export async function createTestEnv(opts: { legacyDown?: boolean } = {}) {
     store,
     desk,
     legacy,
-    deps: (model: TurnDeps["model"]): TurnDeps => ({ model, store, desk, tickets, clock }),
+    deps: (model: TurnDeps["model"], fallbackModel?: TurnDeps["model"]): TurnDeps => ({
+      model,
+      ...(fallbackModel ? { fallbackModel } : {}),
+      store,
+      desk,
+      tickets,
+      clock,
+    }),
     cleanup: () => {
       ticketsDb.close();
       appDb.close();

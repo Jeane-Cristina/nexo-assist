@@ -28,6 +28,14 @@ async function build(): Promise<Container> {
   const tickets = new TicketsClient({ baseUrl: e.TICKETS_SERVICE_URL, serviceToken: e.SERVICE_TOKEN });
   const store = new ConversationStore(db, clock);
   const desk = new ServiceDesk(tickets, store, clock);
-  // "google/gemini-3.8-flash": o roteador de modelos do Mastra resolve o provedor e lê a chave do ambiente.
-  return { db, model: e.LLM_MODEL as TurnDeps["model"], store, desk, tickets, clock };
+  // "google/gemini-3.5-flash-lite": o roteador de modelos do Mastra resolve o provedor e lê a chave do ambiente.
+  return {
+    db,
+    model: e.LLM_MODEL,
+    ...(e.LLM_FALLBACK_MODEL ? { fallbackModel: e.LLM_FALLBACK_MODEL } : {}),
+    store,
+    desk,
+    tickets,
+    clock,
+  };
 }

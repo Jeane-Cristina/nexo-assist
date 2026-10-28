@@ -246,12 +246,38 @@ describe("limites e falhas", () => {
     expect(result.messages[0]?.content).toContain("limite de 30 mensagens");
   });
 
+  it("modelo principal sobrecarregado: responde com o modelo reserva e registra isso", async () => {
+    const primary = scriptedModel(() => {
+      throw new Error("503 UNAVAILABLE: This model is currently experiencing high demand");
+    });
+    const reserve = scriptedModel([[decision("conversa", 0.95)], "Olá! Como posso ajudar?"]);
+    const result = await handleEmployeeMessage(env.deps(primary.model, reserve.model), { conversation, employee: ANA, text: "oi" });
+    const msg = result.messages.at(-1)!;
+    expect(msg.content).toBe("Olá! Como posso ajudar?");
+    expect(msg.meta.decision?.guardrails.join(" ")).toContain("modelo reserva");
+  });
+
+  it("não troca de modelo no meio do turno se uma ferramenta já rodou (evita repetir efeitos)", async () => {
+    let calls = 0;
+    const busy = () => {
+      calls++;
+      throw new Error("503 high demand");
+    };
+    // o Mastra ainda faz uma nova tentativa no mesmo modelo (maxRetries: 1)
+    const primary = scriptedModel([[{ tool: "listar_meus_chamados", args: { incluirEncerrados: false } }], busy, busy]);
+    const reserve = scriptedModel([]);
+    const result = await handleEmployeeMessage(env.deps(primary.model, reserve.model), { conversation, employee: ANA, text: "meus chamados" });
+    expect(calls).toBeGreaterThan(0);
+    expect(reserve.prompts).toHaveLength(0);
+    expect(result.messages.at(-1)?.content).toContain("sobrecarregado");
+  });
+
   it("erro de cota do modelo vira resposta amigável", async () => {
     const scripted = scriptedModel(() => {
       throw new Error("429 RESOURCE_EXHAUSTED: quota exceeded");
     });
     const result = await handleEmployeeMessage(env.deps(scripted.model), { conversation, employee: ANA, text: "oi" });
-    expect(result.messages.at(-1)?.content).toContain("muitas mensagens");
+    expect(result.messages.at(-1)?.content).toContain("sobrecarregado");
   });
 });
 

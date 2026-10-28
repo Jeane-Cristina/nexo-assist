@@ -27,6 +27,8 @@ const MAX_STEPS = 8;
 
 export type TurnDeps = {
   model: MastraModelConfig;
+  /** Modelo reserva, usado quando o principal está sobrecarregado ou sem cota. */
+  fallbackModel?: MastraModelConfig;
   store: ConversationStore;
   desk: ServiceDesk;
   tickets: TicketsClient;
@@ -67,20 +69,36 @@ export async function handleEmployeeMessage(
   const recorder = new TurnRecorder(conversation, startedAt);
   const history = await store.listMessages(conversation.id, { last: HISTORY_WINDOW });
 
-  const agent = new Agent({
-    id: "nexo-assist",
-    name: "Nexo Assist",
-    instructions: buildInstructions({ employee: input.employee, conversation, now: startedAt }),
-    model: deps.model,
-    tools: createAgentTools({ actor, employee: input.employee, tickets: deps.tickets, desk: deps.desk, recorder, clock: deps.clock }),
-  });
+  const tools = createAgentTools({ actor, employee: input.employee, tickets: deps.tickets, desk: deps.desk, recorder, clock: deps.clock });
+  const instructions = buildInstructions({ employee: input.employee, conversation, now: startedAt });
+  const models = [deps.model, ...(deps.fallbackModel ? [deps.fallbackModel] : [])];
 
-  let text: string;
-  try {
-    const result = await agent.generate(toModelMessages(history), { maxSteps: MAX_STEPS });
-    text = result.text.trim();
-  } catch (err) {
-    return answerWithError(deps, recorder, employeeMsg, err);
+  let text = "";
+  for (const [index, model] of models.entries()) {
+    const agent = new Agent({
+      id: "nexo-assist",
+      name: "Nexo Assist",
+      instructions,
+      model,
+      // Uma nova tentativa no mesmo modelo; depois disso, melhor ir para o reserva
+      // do que deixar o funcionário esperando quase um minuto.
+      maxRetries: 1,
+      tools,
+    });
+    try {
+      const result = await agent.generate(toModelMessages(history), { maxSteps: MAX_STEPS });
+      text = result.text.trim();
+      if (index > 0) recorder.guardrail(`Modelo principal indisponível; respondi com o modelo reserva (${modelName(model)}).`);
+      break;
+    } catch (err) {
+      const hasNext = index < models.length - 1;
+      // Só troca de modelo se nenhuma ferramenta rodou: refazer o turno não pode repetir efeitos.
+      if (hasNext && isProviderBusy(err) && recorder.steps.length === 0) {
+        console.warn(`[agent] ${modelName(model)} indisponível (${errorMessage(err)}); tentando o reserva.`);
+        continue;
+      }
+      return answerWithError(deps, recorder, employeeMsg, err);
+    }
   }
 
   if (!recorder.decision) {
@@ -149,13 +167,22 @@ export function toModelMessages(history: Message[]): ModelMessage[] {
   });
 }
 
+const errorMessage = (err: unknown): string => (err instanceof Error ? err.message : String(err));
+
+const modelName = (model: MastraModelConfig): string => (typeof model === "string" ? model : "modelo configurado");
+
+/** Sobrecarga ou cota do provedor de IA: vale tentar outro modelo. */
+export function isProviderBusy(err: unknown): boolean {
+  return /\b(429|503)\b|quota|rate.?limit|resource.?exhausted|high demand|overloaded|unavailable/i.test(errorMessage(err));
+}
+
 async function answerWithError(deps: TurnDeps, recorder: TurnRecorder, employeeMsg: Message, err: unknown): Promise<TurnResult> {
-  const message = err instanceof Error ? err.message : String(err);
-  const rateLimited = /429|quota|rate.?limit|resource.?exhausted/i.test(message);
+  const message = errorMessage(err);
+  const busy = isProviderBusy(err);
   console.error("[agent] falha ao gerar resposta:", message);
-  recorder.guardrail(rateLimited ? "O provedor do modelo limitou as requisições (cota gratuita)." : "Falha ao chamar o modelo de IA.");
-  const content = rateLimited
-    ? "Estou recebendo muitas mensagens agora e preciso de alguns segundos. Pode enviar de novo daqui a pouco?"
+  recorder.guardrail(busy ? "O serviço de IA está sobrecarregado ou sem cota no momento." : "Falha ao chamar o modelo de IA.");
+  const content = busy
+    ? "O serviço de IA que eu uso está sobrecarregado agora. Pode enviar de novo daqui a alguns segundos? Se for urgente, peça para falar com um analista."
     : "Tive um problema para processar sua mensagem. Pode tentar de novo? Se continuar, peça para falar com um analista.";
   const agentMsg = await deps.store.appendMessage(recorder.conversation.id, {
     role: "agent",

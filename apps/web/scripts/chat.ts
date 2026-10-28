@@ -46,7 +46,7 @@ function print(m: Message) {
   }
 }
 
-console.log(`${c.bold}Nexo Assist${c.reset} — você é ${employee.name} (${employee.device ?? "sem equipamento"}). Modelo: ${process.env.LLM_MODEL ?? "google/gemini-3.8-flash"}`);
+console.log(`${c.bold}Nexo Assist${c.reset} — você é ${employee.name} (${employee.device ?? "sem equipamento"}). Modelo: ${process.env.LLM_MODEL ?? "google/gemini-3.5-flash-lite"}${process.env.LLM_FALLBACK_MODEL ? ` (reserva: ${process.env.LLM_FALLBACK_MODEL})` : ""}`);
 for (const m of await container.store.listMessages(conversation.id, { last: 6 })) {
   if (m.role === "employee") console.log(`${c.bold}você:${c.reset} ${m.content}`);
   else print(m);

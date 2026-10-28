@@ -109,11 +109,13 @@ const SCENARIOS: Scenario[] = [
 ];
 
 const only = process.env.EVAL_ONLY?.split(",").map((s) => s.trim());
-const delayMs = Number(process.env.EVAL_DELAY_MS ?? 4000);
-const model = process.env.LLM_MODEL ?? "google/gemini-3.8-flash";
+// Flash-Lite gratuito: 15 req/min; cada turno usa ~4 chamadas → ~16s entre turnos.
+const delayMs = Number(process.env.EVAL_DELAY_MS ?? 16000);
+const model = process.env.LLM_MODEL ?? "google/gemini-3.5-flash-lite";
+const fallback = process.env.LLM_FALLBACK_MODEL;
 const selected = SCENARIOS.filter((s) => !only || only.includes(s.id));
 
-console.log(`Avaliando ${selected.length} cenários com ${model}\n`);
+console.log(`Avaliando ${selected.length} cenários com ${model}${fallback ? ` (reserva: ${fallback})` : ""}\n`);
 let passed = 0;
 let total = 0;
 
@@ -123,7 +125,7 @@ for (const scenario of selected) {
   const messages: Message[] = [];
   try {
     for (const text of scenario.turns) {
-      const r = await handleEmployeeMessage(env.deps(model), { conversation, employee: ANA, text });
+      const r = await handleEmployeeMessage(env.deps(model, fallback), { conversation, employee: ANA, text });
       conversation = r.conversation;
       messages.push(...r.messages);
       await new Promise((res) => setTimeout(res, delayMs));
