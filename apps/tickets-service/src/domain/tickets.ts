@@ -2,6 +2,7 @@ import type { NewTicket, Repository } from "../db/repository";
 import { DomainError } from "./errors";
 import { searchArticles, type ArticleMatch } from "./knowledge-base";
 import { canReopen, isOpen, toTicketView, type TicketView } from "./rules";
+import { slaFor } from "./sla";
 import type { ActorRole, Category, Employee, Impact, Priority, TicketEvent, TicketStatus } from "./types";
 import { CLOSED_STATUSES } from "./types";
 
@@ -43,11 +44,26 @@ export class TicketService {
     return { ...toTicketView(ticket, this.clock()), events };
   }
 
-  async createTicket(actor: Actor, input: Omit<NewTicket, "requesterEmail">): Promise<TicketView> {
+  /** `replayed: true` quando a mesma chave de idempotência já tinha criado o chamado. */
+  async createTicket(
+    actor: Actor,
+    input: Omit<NewTicket, "requesterEmail">,
+    idempotencyKey?: string,
+  ): Promise<{ ticket: TicketView; replayed: boolean }> {
     if (actor.role !== "employee") throw new DomainError("forbidden", "Somente funcionários abrem chamados pelo assistente.");
     await this.getEmployee(actor.email);
-    const created = await this.repo.createTicket({ ...input, requesterEmail: actor.email }, this.clock());
-    return toTicketView(created, this.clock());
+    if (idempotencyKey) {
+      const existing = await this.repo.findByIdempotencyKey(idempotencyKey, actor.email);
+      if (existing) return { ticket: toTicketView(existing, this.clock()), replayed: true };
+    }
+    const created = await this.repo.createTicket({ ...input, requesterEmail: actor.email }, this.clock(), idempotencyKey);
+    return { ticket: toTicketView(created, this.clock()), replayed: false };
+  }
+
+  /** Prévia do prazo para o rascunho, sem duplicar a regra de SLA fora deste serviço. */
+  previewSla(priority: Priority): { label: string; dueAt: string } {
+    const { label, dueAt } = slaFor(priority, this.clock(), true, this.clock());
+    return { label, dueAt };
   }
 
   /**

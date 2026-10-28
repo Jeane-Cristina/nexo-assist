@@ -65,7 +65,7 @@ export async function seed(db: Client, now: Date): Promise<void> {
 
 export async function wipe(db: Client): Promise<void> {
   await db.batch(
-    ["DROP TABLE IF EXISTS ticket_events", "DROP TABLE IF EXISTS tickets", "DROP TABLE IF EXISTS articles", "DROP TABLE IF EXISTS employees"],
+    ["DROP TABLE IF EXISTS idempotency_keys", "DROP TABLE IF EXISTS ticket_events", "DROP TABLE IF EXISTS tickets","DROP TABLE IF EXISTS articles", "DROP TABLE IF EXISTS employees"],
     "write",
   );
 }

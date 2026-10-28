@@ -100,8 +100,14 @@ export function createApp({ service, serviceToken, instability }: AppDeps) {
   app.get("/tickets/:number", async (c) => c.json({ ticket: await service.getTicket(c.get("actor"), c.req.param("number")) }));
 
   app.post("/tickets", async (c) => {
-    const ticket = await service.createTicket(c.get("actor"), await body(c, CreateTicketBody));
-    return c.json({ ticket }, 201);
+    const key = c.req.header("idempotency-key");
+    const { ticket, replayed } = await service.createTicket(c.get("actor"), await body(c, CreateTicketBody), key || undefined);
+    return c.json({ ticket, replayed }, replayed ? 200 : 201);
+  });
+
+  app.get("/sla/preview", (c) => {
+    const priority = Priority.parse(c.req.query("priority"));
+    return c.json({ sla: service.previewSla(priority) });
   });
 
   app.post("/tickets/:number/updates", async (c) => {

@@ -50,6 +50,12 @@ export async function migrate(db: Client): Promise<void> {
         created_at TEXT NOT NULL
       )`,
       `CREATE INDEX IF NOT EXISTS idx_events_ticket ON ticket_events(ticket_number)`,
+      `CREATE TABLE IF NOT EXISTS idempotency_keys (
+        key TEXT PRIMARY KEY,
+        requester_email TEXT NOT NULL,
+        ticket_number TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )`,
       `CREATE TABLE IF NOT EXISTS articles (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,

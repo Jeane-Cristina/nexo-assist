@@ -112,8 +112,21 @@ export class Repository {
     return rows.map(toEvent);
   }
 
-  /** Gera o próximo número (INC-xxxxx / REQ-xxxxx) e grava chamado + evento numa transação. */
-  async createTicket(input: NewTicket, now: Date): Promise<Ticket> {
+  async findByIdempotencyKey(key: string, requesterEmail: string): Promise<Ticket | null> {
+    const { rows } = await this.db.execute({
+      sql: "SELECT ticket_number FROM idempotency_keys WHERE key = ? AND requester_email = ?",
+      args: [key, requesterEmail.toLowerCase()],
+    });
+    const number = rows[0]?.ticket_number;
+    return number ? this.findTicket(String(number)) : null;
+  }
+
+  /**
+   * Gera o próximo número (INC-xxxxx / REQ-xxxxx) e grava chamado + evento numa transação.
+   * Com `idempotencyKey`, a chave é gravada na mesma transação: um retry com a mesma
+   * chave nunca cria um segundo chamado.
+   */
+  async createTicket(input: NewTicket, now: Date, idempotencyKey?: string): Promise<Ticket> {
     const tx = await this.db.transaction("write");
     try {
       const { rows } = await tx.execute({
@@ -134,6 +147,12 @@ export class Repository {
         sql: "INSERT INTO ticket_events (ticket_number, kind, actor, message, created_at) VALUES (?, 'criado', ?, ?, ?)",
         args: [number, input.requesterEmail, "Chamado aberto pelo Nexo Assist.", ts],
       });
+      if (idempotencyKey) {
+        await tx.execute({
+          sql: "INSERT INTO idempotency_keys (key, requester_email, ticket_number, created_at) VALUES (?, ?, ?, ?)",
+          args: [idempotencyKey, input.requesterEmail, number, ts],
+        });
+      }
       await tx.commit();
       const created = await this.findTicket(number);
       if (!created) throw new Error(`Chamado ${number} não encontrado após criação`);

@@ -138,6 +138,36 @@ describe("abertura e atualização", () => {
     expect(json.ticket.sla).toMatchObject({ label: "4 horas úteis", overdue: false, dueAt: "2026-10-28T17:00:00.000Z" });
   });
 
+  it("mesma chave de idempotência não cria chamado duplicado (retry seguro)", async () => {
+    const send = () =>
+      app.request("/tickets", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-service-token": TOKEN,
+          "x-actor-email": ANA,
+          "x-actor-role": "employee",
+          "idempotency-key": "D-381",
+        },
+        body: JSON.stringify(vpn),
+      });
+    const first = await send();
+    const second = await send();
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(200);
+    const a = (await first.json()) as any;
+    const b = (await second.json()) as any;
+    expect(b.replayed).toBe(true);
+    expect(b.ticket.number).toBe(a.ticket.number);
+    const { json } = await call("/tickets");
+    expect(json.tickets.filter((t: any) => t.title === vpn.title)).toHaveLength(1);
+  });
+
+  it("prévia do prazo usa a mesma regra de SLA", async () => {
+    const { json } = await call("/sla/preview?priority=alta");
+    expect(json.sla).toEqual({ label: "4 horas úteis", dueAt: "2026-10-28T17:00:00.000Z" });
+  });
+
   it("valida o corpo e devolve erro legível", async () => {
     const { status, json } = await call("/tickets", { body: { ...vpn, priority: "urgentissima" } });
     expect(status).toBe(400);
