@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Client } from "@libsql/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createDb, migrate } from "../src/db/client";
 import { Repository } from "../src/db/repository";
 import { seed } from "../src/db/seed";
@@ -18,9 +18,12 @@ const RAFAEL = "rafael.lima@nexo.com.br";
 const NOW = new Date("2026-10-28T13:00:00.000Z");
 
 let dir: string;
+let testIndex = 0;
 let db: Client;
 let app: ReturnType<typeof createApp>;
 let instability: ReturnType<typeof createInstability>;
+/** Avança o relógio falso da instabilidade (usado no teste de indisponibilidade). */
+let advanceClock: (ms: number) => void;
 
 type Opts = { actor?: string; role?: "employee" | "analyst"; body?: unknown; method?: string; token?: string };
 
@@ -38,22 +41,38 @@ async function call(path: string, opts: Opts = {}) {
   return { status: res.status, json: (await res.json()) as Record<string, any> };
 }
 
+beforeAll(() => {
+  dir = mkdtempSync(join(tmpdir(), "tickets-test-"));
+});
+
 beforeEach(async () => {
   // Arquivo temporário (e não :memory:) porque transações do libsql abrem outra conexão.
-  dir = mkdtempSync(join(tmpdir(), "tickets-test-"));
-  db = createDb(`file:${join(dir, "test.db")}`);
+  // Um arquivo por teste: no Windows o handle do SQLite pode continuar preso por alguns
+  // instantes depois do close(), então não dá para apagar e recriar o mesmo arquivo.
+  testIndex += 1;
+  db = createDb(`file:${join(dir, `test-${testIndex}.db`)}`);
   await migrate(db);
   await seed(db, NOW);
   let fakeNow = NOW.getTime();
   instability = createInstability({ failureRate: 0, maxLatencyMs: 0, now: () => fakeNow });
   app = createApp({ service: new TicketService(new Repository(db), () => NOW), serviceToken: TOKEN, instability });
-  // permite que o teste de indisponibilidade "passe o tempo"
-  (globalThis as any).__advance = (ms: number) => (fakeNow += ms);
+  advanceClock = (ms) => {
+    fakeNow += ms;
+  };
 });
 
 afterEach(() => {
   db.close();
-  rmSync(dir, { recursive: true, force: true });
+});
+
+afterAll(() => {
+  // Limpeza é "melhor esforço": se o Windows ainda segurar algum arquivo,
+  // a pasta fica no temp do sistema e não deve derrubar a suíte.
+  try {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  } catch {
+    /* ignorado de propósito */
+  }
 });
 
 describe("autenticação entre serviços", () => {
@@ -215,7 +234,7 @@ describe("legado instável", () => {
     const down = await call("/tickets");
     expect(down.status).toBe(503);
     expect(down.json.error).toBe("legacy_unavailable");
-    (globalThis as any).__advance(6000);
+    advanceClock(6000);
     const up = await call("/tickets");
     expect(up.status).toBe(200);
   });
