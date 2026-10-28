@@ -30,6 +30,12 @@ const SCENARIOS: Scenario[] = [
       { name: "não criou rascunho ainda", ok: ({ conversation }) => conversation.pendingAction === null },
       { name: "mencionou Windows 11 ou o limite do artigo", ok: ({ messages }) => /windows\s*11|windows\s*10/i.test(lastAgent(messages)?.content ?? "") },
       { name: "registrou decisão", ok: ({ messages }) => lastAgent(messages)?.meta.decision?.confidence !== null },
+      {
+        name: "opções rápidas respondem a pergunta (quem é afetado)",
+        ok: ({ messages }) => (lastAgent(messages)?.meta.quickReplies ?? []).some((q) => /só eu|equipe|empresa/i.test(q)),
+      },
+      { name: "intenção: abertura de chamado", ok: ({ messages }) => lastAgent(messages)?.meta.decision?.intent === "abrir_chamado" },
+      { name: "motivo em segunda pessoa", ok: ({ messages }) => !/\b(a Ana|usuária|usuário|o funcionário|a funcionária)\b/i.test(lastAgent(messages)?.meta.decision?.reason ?? "") },
     ],
   },
   {
@@ -56,6 +62,10 @@ const SCENARIOS: Scenario[] = [
     checks: [
       { name: "consultou os chamados", ok: ({ messages }) => usedTool(messages, "listar_meus_chamados") },
       { name: "mostrou a lista para escolher", ok: ({ messages }) => lastAgent(messages)?.meta.cards?.[0]?.kind === "ticket_list" },
+      {
+        name: "não repetiu a lista no texto (o cartão já mostra)",
+        ok: ({ messages }) => ((lastAgent(messages)?.content ?? "").match(/(INC|REQ)-\d+/g) ?? []).length <= 1,
+      },
     ],
   },
   {

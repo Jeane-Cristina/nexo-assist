@@ -32,11 +32,13 @@ export type TriageResult = {
 };
 
 export function classifyPriority({ impact, blocking, deadlineToday }: TriageInput): TriageResult {
+  // A regra lista TODOS os fatos que pesaram, para o texto do agent e o painel nunca se contradizerem.
+  const today = deadlineToday ? " e há um compromisso hoje que depende disso" : "";
   if (blocking === "parado" && impact !== "individual") {
-    return { priority: "critica", rule: `Está parado para ${impact === "empresa" ? "a empresa" : "uma equipe"}.` };
+    return { priority: "critica", rule: `Está parado para ${impact === "empresa" ? "a empresa" : "uma equipe"}${today}.` };
   }
   if (blocking === "parado") {
-    return { priority: "alta", rule: "Impede você de trabalhar." };
+    return { priority: "alta", rule: `Impede você de trabalhar${today}.` };
   }
   if (deadlineToday) {
     return { priority: "alta", rule: "Há um compromisso hoje que depende disso." };

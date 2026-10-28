@@ -19,6 +19,13 @@ describe("prioridade = impacto × urgência", () => {
     expect(r).toEqual({ priority: "alta", rule: "Há um compromisso hoje que depende disso." });
   });
 
+  it("a regra cita todos os fatos que pesaram (parado + compromisso hoje)", () => {
+    expect(classifyPriority({ impact: "individual", blocking: "parado", deadlineToday: true })).toEqual({
+      priority: "alta",
+      rule: "Impede você de trabalhar e há um compromisso hoje que depende disso.",
+    });
+  });
+
   it("atrapalha com alternativa é média, mesmo para a equipe", () => {
     expect(classifyPriority({ impact: "equipe", blocking: "atrapalha", deadlineToday: false }).priority).toBe("media");
   });
