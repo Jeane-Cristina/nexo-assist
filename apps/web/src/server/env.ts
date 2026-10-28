@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const EnvSchema = z.object({
-  LLM_MODEL: z.string().regex(/^[a-z0-9-]+\/.+$/, "use o formato provedor/modelo").default("google/gemini-2.5-flash"),
+  LLM_MODEL: z.string().regex(/^[a-z0-9-]+\/.+$/, "use o formato provedor/modelo").default("google/gemini-3.8-flash"),
   TICKETS_SERVICE_URL: z.string().url().default("http://localhost:4000"),
   SERVICE_TOKEN: z.string().min(16, "SERVICE_TOKEN precisa ter pelo menos 16 caracteres"),
   APP_DB_URL: z.string().default("file:./data/app.db"),
