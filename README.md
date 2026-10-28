@@ -8,31 +8,40 @@ Agent de atendimento do service desk de TI da Nexo: o funcionário descreve o pr
 
 ```
 apps/
-  tickets-service/   serviço de chamados simulado (o "sistema legado")
-  web/               agent (Mastra), chat do funcionário e console do analista
+  tickets-service/   serviço de chamados simulado (o "sistema legado"), API REST na porta 4000
+  web/               Next.js: telas, rotas de API e o agent (Mastra), porta 3000
 ```
 
-## Conversando com o agent pelo terminal
+## Como rodar
 
-Com o serviço de chamados rodando (abaixo):
-
-```bash
-cp apps/web/.env.example apps/web/.env.local   # coloque a chave do Gemini e o mesmo SERVICE_TOKEN
-pnpm --filter web chat
-```
-
-Avaliação dos cenários do PRD contra o modelo real: `pnpm --filter web eval`.
-
-## Rodando o serviço de chamados
-
-Requisitos: Node 22+ e pnpm 10+.
+Requisitos: Node 20.12+ (recomendado 22) e pnpm 10+.
 
 ```bash
 pnpm install
-cp apps/tickets-service/.env.example apps/tickets-service/.env   # defina SERVICE_TOKEN
+
+# 1. Variáveis de ambiente (use o MESMO SERVICE_TOKEN nos dois arquivos)
+cp apps/tickets-service/.env.example apps/tickets-service/.env
+cp apps/web/.env.example apps/web/.env.local     # + GOOGLE_GENERATIVE_AI_API_KEY e SESSION_SECRET
+
+# 2. Em um terminal: serviço de chamados (cria e popula o banco no primeiro boot)
 pnpm --filter tickets-service dev
+
+# 3. Em outro terminal: o app
+pnpm --filter web dev
 ```
 
-O banco SQLite é criado e populado com dados de exemplo no primeiro boot. Para recriar os dados (as datas são relativas a "agora"): `pnpm seed`.
+Abra http://localhost:3000 e entre com:
+
+| Perfil | E-mail | Senha |
+|---|---|---|
+| Funcionária | `ana.souza@nexo.com.br` | `nexo123` |
+| Analista | `rafael.lima@nexo.com.br` | `nexo123` |
+
+A senha é única para a demonstração (`DEMO_PASSWORD`). Para recriar os dados de exemplo (as datas são relativas a "agora"): `pnpm seed`.
+
+## Outras formas de usar o agent
+
+- **Pelo terminal**, sem as telas: `pnpm --filter web chat`
+- **Avaliação** dos cenários do PRD contra o modelo real: `pnpm --filter web eval`
 
 Testes: `pnpm test` · Tipos: `pnpm typecheck`
