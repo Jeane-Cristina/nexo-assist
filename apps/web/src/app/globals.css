@@ -36,22 +36,28 @@
   --color-human-bubble: #e3f4ea;
 }
 
-html,
-body {
-  height: 100%;
-}
+/*
+ * Estilos base dentro de @layer base: assim as classes do Tailwind (camada utilities)
+ * continuam valendo. Fora da camada, "font: inherit" anulava o tamanho de fonte
+ * de todos os botões e campos.
+ */
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
 
-body {
-  background: #ffffff;
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    background: #ffffff;
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
 
-/* Botões e campos herdam a fonte do app */
-button,
-input,
-textarea,
-select {
-  font: inherit;
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
 }
