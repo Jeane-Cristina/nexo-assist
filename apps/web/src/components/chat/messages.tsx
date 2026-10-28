@@ -4,6 +4,7 @@ import { Check, ChevronDown, X } from "lucide-react";
 import { useState } from "react";
 import type { Conversation, DraftTicket, Message, TicketSummary } from "@/server/conversations/types";
 import { formatTime } from "@/server/format";
+import { systemIcon } from "../timeline-icons";
 import { PendingCard, TicketCard, TicketListCard } from "./cards";
 import { DecisionPanel } from "./decision-panel";
 
@@ -20,11 +21,14 @@ export function ChatMessage({
   message,
   conversation,
   isLast,
+  answer,
   busy,
   handlers,
 }: {
   message: Message;
   conversation: Conversation;
+  /** O que o funcionário respondeu logo depois (para destacar a opção escolhida). */
+  answer?: string;
   /** Só a última mensagem aceita cliques em opções e listas. */
   isLast: boolean;
   busy: boolean;
@@ -39,14 +43,19 @@ export function ChatMessage({
           </p>
         </div>
       );
-    case "system":
+    case "system": {
+      const Icon = systemIcon(message.content);
       return (
         <div className="flex items-center gap-3 py-1 text-[12px] font-medium text-muted">
           <span className="h-px flex-1 bg-ink/10" />
-          {message.content} · {formatTime(message.createdAt)}
+          <span className="flex items-center gap-1.5">
+            {Icon && <Icon className="size-3.5" />}
+            {message.content} · {formatTime(message.createdAt)}
+          </span>
           <span className="h-px flex-1 bg-ink/10" />
         </div>
       );
+    }
     case "analyst":
       return (
         <div className="flex flex-col gap-1.5">
@@ -62,7 +71,7 @@ export function ChatMessage({
         </div>
       );
     case "agent":
-      return <AgentMessage message={message} conversation={conversation} isLast={isLast} busy={busy} handlers={handlers} />;
+      return <AgentMessage message={message} conversation={conversation} isLast={isLast} answer={answer} busy={busy} handlers={handlers} />;
   }
 }
 
@@ -70,17 +79,20 @@ function AgentMessage({
   message,
   conversation,
   isLast,
+  answer,
   busy,
   handlers,
 }: {
   message: Message;
   conversation: Conversation;
   isLast: boolean;
+  answer?: string;
   busy: boolean;
   handlers: MessageHandlers;
 }) {
   const [open, setOpen] = useState(false);
   const { steps = [], decision, cards = [], quickReplies = [] } = message.meta;
+  const { body, question } = splitQuestion(message.content);
   const canAct = isLast && !busy && conversation.status === "agent";
 
   return (
@@ -110,18 +122,29 @@ function AgentMessage({
       {open && decision && <DecisionPanel decision={decision} steps={steps} />}
 
       <div className="flex max-w-[600px] flex-col gap-3 rounded-[4px_12px_12px_12px] border border-line bg-white px-4 py-3">
-        <p className="text-[14.5px] leading-[22px] whitespace-pre-wrap">{message.content}</p>
-        {quickReplies.length > 0 && canAct && (
+        {body && <p className="text-[14.5px] leading-[22px] whitespace-pre-wrap">{body}</p>}
+        {question && <p className="text-[14.5px] font-semibold">{question}</p>}
+        {quickReplies.length > 0 && (
+          // Como no protótipo, as opções ficam na mensagem mesmo depois de respondidas,
+          // com a escolhida destacada. Só a última mensagem aceita clique.
           <div className="flex flex-wrap gap-1.5">
-            {quickReplies.map((q) => (
-              <button
-                key={q}
-                onClick={() => handlers.send(q)}
-                className="rounded-lg border border-line bg-white px-3 py-[7px] text-[13.5px] font-medium hover:border-primary/40 hover:bg-primary-tint hover:text-link"
-              >
-                {q}
-              </button>
-            ))}
+            {quickReplies.map((q) => {
+              const chosen = answer !== undefined && sameText(answer, q);
+              return (
+                <button
+                  key={q}
+                  disabled={!canAct}
+                  onClick={() => handlers.send(q)}
+                  className={`rounded-lg border px-3 py-[7px] text-[13.5px] font-medium ${
+                    chosen
+                      ? "border-info bg-primary-tint text-link"
+                      : "border-line bg-white enabled:hover:border-primary/40 enabled:hover:bg-primary-tint enabled:hover:text-link disabled:text-muted"
+                  }`}
+                >
+                  {q}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -156,4 +179,21 @@ function AgentMessage({
       })}
     </div>
   );
+}
+
+const sameText = (a: string, b: string): boolean => a.trim().toLowerCase().startsWith(b.trim().toLowerCase());
+
+/**
+ * Separa a pergunta final da resposta, para mostrá-la em destaque como no protótipo
+ * ("Quem está sendo afetado?"). Só separa quando há texto antes da pergunta.
+ */
+export function splitQuestion(content: string): { body: string; question: string | null } {
+  const text = content.trim();
+  if (!text.endsWith("?")) return { body: text, question: null };
+  const paragraphs = text.split(/\n\s*\n/);
+  if (paragraphs.length > 1) {
+    return { body: paragraphs.slice(0, -1).join("\n\n"), question: paragraphs.at(-1)!.trim() };
+  }
+  const match = text.match(/^([\s\S]*[.!])\s+([^.!?]+\?)$/);
+  return match ? { body: match[1]!.trim(), question: match[2]!.trim() } : { body: text, question: null };
 }

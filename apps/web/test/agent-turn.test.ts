@@ -23,7 +23,9 @@ async function turn(text: string, script: ScriptStep[]) {
   const scripted = scriptedModel(script);
   const result = await handleEmployeeMessage(env.deps(scripted.model), { conversation, employee: ANA, text });
   conversation = result.conversation;
-  return { result, scripted, agentMsg: result.messages.at(-1)! };
+  // A resposta do agent (depois dela pode vir o marco "Transferida...").
+  const agentMsg = [...result.messages].reverse().find((m) => m.role === "agent") ?? result.messages.at(-1)!;
+  return { result, scripted, agentMsg };
 }
 
 const VPN_DRAFT = {

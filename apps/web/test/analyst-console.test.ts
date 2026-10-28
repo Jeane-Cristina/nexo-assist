@@ -52,7 +52,8 @@ describe("fila de conversas", () => {
     const conv = await anaTransfers();
     const { items, counts } = await listConversations(noModel(), rafael, { filter: "para_voce" });
     expect(items.map((i) => i.conversation.id)).toEqual([conv.id]);
-    expect(items[0]?.lastMessage?.content).toBe("Encaminhei para um analista.");
+    // o último item da linha do tempo é o marco da transferência, depois da resposta do agent
+    expect(items[0]?.lastMessage).toMatchObject({ role: "system", content: "Transferida para um analista · funcionário pediu um analista" });
     expect(counts).toMatchObject({ para_voce: 1, com_agent: 0, minhas: 0, todas: 1 });
   });
 

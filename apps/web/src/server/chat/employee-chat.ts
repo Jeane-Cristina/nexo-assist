@@ -153,7 +153,13 @@ export async function pendingAction(
         cards: [{ kind: "ticket", ticket: toTicketSummary(outcome.ticket) }],
       },
     });
-    return { conversation: await deps.store.require(conversation.id), messages: [msg] };
+    const after = await deps.store.require(conversation.id);
+    const messages = [msg];
+    if (outcome.autoTransfer) {
+      await deps.desk.markTransferred(after);
+      messages.push(...(await deps.store.listMessages(conversation.id, { last: 1 })));
+    }
+    return { conversation: after, messages };
   } catch (err) {
     if (err instanceof TicketsError && err.kind === "unavailable") {
       throw new ChatError(503, "O sistema de chamados está instável agora. Seu rascunho continua salvo: confirme de novo em instantes.");

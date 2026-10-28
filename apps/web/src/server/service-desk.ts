@@ -1,7 +1,7 @@
 import { randomInt } from "node:crypto";
 import { classifyPriority, type TriageInput } from "./agent/triage";
 import type { ConversationStore } from "./conversations/store";
-import type { Card, Conversation, DraftTicket, PendingAction, TicketSummary, TransferReason } from "./conversations/types";
+import { TRANSFER_REASON_LABEL, type Card, type Conversation, type DraftTicket, type PendingAction, type TicketSummary, type TransferReason } from "./conversations/types";
 import { formatDeadline } from "./format";
 import { TicketsError, type Actor, type TicketsClient } from "./tickets/client";
 import { PRIORITY_LABEL, STATUS_LABEL, type Ticket } from "./tickets/schemas";
@@ -210,6 +210,18 @@ export class ServiceDesk {
       },
     });
     return { conversation: updated, contactEstimate, ticketUpdated };
+  }
+
+  /**
+   * Marco "Transferida..." na linha do tempo. Fica separado de transfer() para
+   * entrar DEPOIS da resposta do agent que avisou o funcionário, como no protótipo.
+   */
+  async markTransferred(conversation: Conversation): Promise<void> {
+    if (!conversation.transfer) return;
+    await this.store.appendMessage(conversation.id, {
+      role: "system",
+      content: `Transferida para um analista · ${TRANSFER_REASON_LABEL[conversation.transfer.reason].toLowerCase()}`,
+    });
   }
 
   async takeOver(analyst: { email: string; name: string }, conversation: Conversation): Promise<Conversation> {

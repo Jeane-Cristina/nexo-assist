@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, MessageSquare } from "lucide-react";
+import { LogOut, MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { ConsoleFilter, ConsoleList, ConversationDetail } from "@/server/chat/analyst-console";
@@ -106,7 +106,7 @@ export function ConsoleScreen({ me, initialList }: { me: { email: string; name: 
           <NexoMark size={22} color="#1B2431" />
         </span>
         <span className="relative grid size-10 place-items-center rounded-xl bg-white text-ink shadow-sm" title="Conversas">
-          <MessageSquare className="size-5" />
+          <MessageCircle className="size-5" />
           {list.counts.para_voce > 0 && (
             <span className="absolute -top-1 -right-1 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
               {list.counts.para_voce}

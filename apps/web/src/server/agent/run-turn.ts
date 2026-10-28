@@ -146,7 +146,12 @@ export async function handleEmployeeMessage(
     },
   });
   const finalConversation = await store.update(conversation.id, { lastConfidence: confidence });
-  return { kind: "answered", conversation: finalConversation, messages: [employeeMsg, agentMsg] };
+  const messages = [employeeMsg, agentMsg];
+  if (recorder.transferred) {
+    await deps.desk.markTransferred(finalConversation);
+    messages.push(...(await store.listMessages(conversation.id, { last: 1 })));
+  }
+  return { kind: "answered", conversation: finalConversation, messages };
 }
 
 /** Histórico em formato de chat. Analista e eventos de sistema entram como contexto marcado. */

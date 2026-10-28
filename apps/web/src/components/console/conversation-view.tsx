@@ -1,12 +1,13 @@
 "use client";
 
-import { ArrowUp, Bot, ChevronDown, Hand, LogOut, MessageSquareText, RotateCcw, UserCheck } from "lucide-react";
+import { Bot, CheckCheck, ChevronDown, CircleCheckBig, Hand, Headset, MessageSquareText, SendHorizontal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { ConversationDetail } from "@/server/chat/analyst-console";
 import type { Card, Conversation, Message } from "@/server/conversations/types";
 import { formatAgo, formatTime } from "@/server/format";
 import { DecisionPanel } from "../chat/decision-panel";
 import { initials } from "../ui";
+import { systemIcon } from "../timeline-icons";
 import { avatarColors } from "./helpers";
 
 /** Coluna central das telas 4 e 5: a conversa vista pelo analista. */
@@ -44,7 +45,7 @@ export function ConversationView({ detail, me, busy, actions }: { detail: Conver
         {mine ? (
           <>
             <button onClick={actions.returnToAgent} disabled={busy} className="flex h-9 items-center gap-1.5 rounded-lg px-3 text-[13.5px] font-medium text-body hover:bg-surface">
-              <RotateCcw className="size-4" />
+              <Bot className="size-4" />
               Devolver ao agent
             </button>
             <button
@@ -52,7 +53,7 @@ export function ConversationView({ detail, me, busy, actions }: { detail: Conver
               disabled={busy}
               className="flex h-9 items-center gap-1.5 rounded-lg bg-danger-tint px-3 text-[13.5px] font-semibold text-danger-ink hover:bg-danger/15"
             >
-              <LogOut className="size-4" />
+              <CircleCheckBig className="size-4" />
               Encerrar atendimento
             </button>
           </>
@@ -83,19 +84,35 @@ function ModePill({ conversation: c }: { conversation: Conversation }) {
     encerrada: ["Encerrada", "bg-surface text-muted"],
   } as const;
   const [label, cls] = map[c.status];
-  return <span className={`rounded-full px-[11px] py-1.5 text-[12.5px] font-semibold ${cls}`}>{label}</span>;
+  return (
+    <span className={`flex items-center gap-[7px] rounded-full px-[11px] py-1.5 text-[12.5px] font-semibold ${cls}`}>
+      {c.status !== "encerrada" && <Bot className="size-3.5" />}
+      {label}
+    </span>
+  );
 }
 
 function ConsoleMessage({ message: m, previous }: { message: Message; previous?: Message }) {
   const [open, setOpen] = useState(false);
   const grouped = previous?.role === m.role && m.role === "employee";
-  const time = <span className="self-end pb-px text-[11px] whitespace-nowrap text-muted">{formatTime(m.createdAt)}</span>;
+  const fromSupport = m.role === "agent" || m.role === "analyst";
+  // Hora no canto da bolha; nas mensagens do suporte, com o "entregue" (✓✓) do protótipo.
+  const time = (
+    <span className="flex items-center gap-[3px] self-end pb-px text-[11px] whitespace-nowrap text-muted">
+      {formatTime(m.createdAt)}
+      {fromSupport && <CheckCheck className="size-3.5 text-info" aria-label="entregue" />}
+    </span>
+  );
 
   if (m.role === "system") {
+    const Icon = systemIcon(m.content);
     return (
       <div className="flex items-center gap-3 pt-[18px] pb-1 text-[12px] font-medium text-muted">
         <span className="h-px flex-1 bg-ink/10" />
-        {m.content} · {formatTime(m.createdAt)}
+        <span className="flex items-center gap-1.5">
+          {Icon && <Icon className="size-3.5" />}
+          {m.content} · {formatTime(m.createdAt)}
+        </span>
         <span className="h-px flex-1 bg-ink/10" />
       </div>
     );
@@ -130,8 +147,11 @@ function ConsoleMessage({ message: m, previous }: { message: Message; previous?:
         {cards.length > 0 && <CardChips cards={cards} />}
       </div>
       {isAgent && decision && (
-        <button onClick={() => setOpen((v) => !v)} className="flex items-center gap-1 px-1 text-[11.5px] text-muted hover:text-link">
-          {steps.map((s) => s.label).join(" · ") || "decisão"} · confiança {decision.confidence === null ? "—" : `${Math.round(decision.confidence * 100)}%`}
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className={`flex items-center gap-1 px-1 text-[11.5px] hover:text-link ${decision.intent === "indefinida" ? "text-warning-ink" : "text-muted"}`}
+        >
+          {decisionSummary(decision, steps)}
           <ChevronDown className={`size-3 transition ${open ? "rotate-180" : ""}`} />
         </button>
       )}
@@ -196,7 +216,7 @@ function Footer({ conversation: c, mine, busy, actions }: { conversation: Conver
             className="max-h-36 min-h-11 flex-1 resize-none rounded-xl bg-surface px-3.5 py-2.5 text-[14.5px] outline-none focus:ring-3 focus:ring-primary/15"
           />
           <button type="submit" disabled={busy || !text.trim()} aria-label="Enviar" className="grid size-11 place-items-center rounded-full bg-primary text-white disabled:opacity-50">
-            <ArrowUp className="size-5" />
+            <SendHorizontal className="size-[18px]" />
           </button>
         </form>
       </div>
@@ -228,7 +248,7 @@ function Footer({ conversation: c, mine, busy, actions }: { conversation: Conver
         </span>
         {waiting && (
           <button onClick={actions.returnToAgent} disabled={busy} className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-[13.5px] font-medium text-body hover:bg-surface">
-            <RotateCcw className="size-4" />
+            <Bot className="size-4" />
             Devolver ao agent
           </button>
         )}
@@ -237,11 +257,18 @@ function Footer({ conversation: c, mine, busy, actions }: { conversation: Conver
           disabled={busy}
           className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-4 text-[13.5px] font-semibold text-white hover:bg-[#0056ad] disabled:opacity-60"
         >
-          <UserCheck className="size-4" />
+          <Headset className="size-4" />
           Assumir atendimento
         </button>
       </div>
       <div className="flex h-11 items-center rounded-xl bg-surface px-3.5 text-[14.5px] text-muted">Assuma o atendimento para responder</div>
     </div>
   );
+}
+
+function decisionSummary(decision: NonNullable<Message["meta"]["decision"]>, steps: NonNullable<Message["meta"]["steps"]>): string {
+  if (decision.intent === "indefinida" && steps.length === 0) return "não conseguiu responder · ver detalhes";
+  const conf = decision.confidence === null ? "confiança não informada" : `confiança ${Math.round(decision.confidence * 100)}%`;
+  const what = steps.length ? steps.map((s) => s.label).join(" · ") : decision.action;
+  return `${what} · ${conf}`;
 }

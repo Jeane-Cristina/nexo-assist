@@ -48,3 +48,12 @@ export function formatAgo(iso: string, now: Date): string {
   const days = Math.floor(hours / 24);
   return `há ${days} ${days === 1 ? "dia" : "dias"}`;
 }
+
+/** "até 13:43" (hoje) / "até amanhã, 11:40" / "até 02 nov, 10:00" — prazo curto, como no protótipo. */
+export function formatUntil(iso: string, now: Date): string {
+  const d = new Date(iso);
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60_000);
+  if (sameDay(d, now)) return `até ${formatTime(d)}`;
+  if (sameDay(d, tomorrow)) return `até amanhã, ${formatTime(d)}`;
+  return `até ${formatDay(d)}, ${formatTime(d)}`;
+}

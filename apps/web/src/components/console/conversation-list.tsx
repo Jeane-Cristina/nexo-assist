@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { CheckCheck, Search } from "lucide-react";
 import type { ConsoleFilter, ConsoleList } from "@/server/chat/analyst-console";
 import { formatTime } from "@/server/format";
 import { Dot, initials } from "../ui";
@@ -102,7 +102,10 @@ export function ConversationList({
                     {lastMessage ? formatTime(lastMessage.createdAt) : ""}
                   </span>
                 </span>
-                <span className="truncate text-[13.5px] text-muted">{previewOf(lastMessage)}</span>
+                <span className="flex items-center gap-1 text-[13.5px] text-muted">
+                  {(lastMessage?.role === "agent" || lastMessage?.role === "analyst") && <CheckCheck className="size-3.5 shrink-0 text-info" />}
+                  <span className="truncate">{previewOf(lastMessage)}</span>
+                </span>
                 <span className={`flex items-center gap-[5px] text-[11.5px] font-medium ${tone.text}`}>
                   <Dot className={tone.dot} />
                   <span className="truncate">{tag.label}</span>

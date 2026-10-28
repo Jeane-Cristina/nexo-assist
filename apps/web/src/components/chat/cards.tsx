@@ -4,7 +4,7 @@ import { Check, CornerDownLeft, Pencil, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BLOCKING_LEVELS } from "@/server/agent/triage";
 import type { DraftTicket, PendingAction, TicketSummary } from "@/server/conversations/types";
-import { formatAgo, formatDay, formatDayTime, formatDeadline } from "@/server/format";
+import { formatAgo, formatDay, formatDayTime, formatUntil } from "@/server/format";
 import { CATEGORIES, IMPACT_LABEL, PRIORITY_LABEL, type Impact } from "@/server/tickets/schemas";
 import { Dot, Field, PRIORITY_DOT, STATUS_DOT } from "../ui";
 
@@ -87,7 +87,7 @@ export function TicketCard({ ticket: t }: { ticket: TicketSummary }) {
         <h3 className="text-[18px] leading-[23px] font-semibold">{t.title}</h3>
         <p className="text-[13.5px] leading-5 text-body">{t.description}</p>
       </div>
-      <div className="grid grid-cols-4 gap-6 border-t border-line px-[18px] pt-3 pb-4">
+      <div className="mx-[18px] grid grid-cols-4 gap-6 border-t border-line pt-3 pb-4">
         <Field label="Categoria">{t.category}</Field>
         <Field label="Prioridade">
           <Dot className={PRIORITY_DOT[t.priority]} />
@@ -98,7 +98,7 @@ export function TicketCard({ ticket: t }: { ticket: TicketSummary }) {
           <Field label="Última atualização">
             <span className={t.sla.overdue ? "text-warning-ink" : ""}>{formatAgo(t.lastSupportUpdateAt, now)}</span>
             <span className="text-[13.5px] font-normal text-muted">
-              {t.sla.overdue ? "· prazo vencido" : `· prazo ${formatDeadline(t.sla.dueAt, now)}`}
+              {t.sla.overdue ? "· prazo vencido" : `· resposta ${formatUntil(t.sla.dueAt, now)}`}
             </span>
           </Field>
         ) : (
@@ -163,7 +163,7 @@ export function PendingCard({ action, active, busy, onConfirm, onCancel, onEdit 
           <p className="text-[13.5px] leading-5 text-body">{action.message}</p>
         </div>
         {action.reclassify && (
-          <div className="grid grid-cols-3 gap-6 border-t border-line px-[18px] pt-3 pb-4">
+          <div className="mx-[18px] grid grid-cols-3 gap-6 border-t border-line pt-3 pb-4">
             <Field label="Nova prioridade">
               <Dot className={PRIORITY_DOT[action.reclassify.priority]} />
               {PRIORITY_LABEL[action.reclassify.priority]}
@@ -197,12 +197,12 @@ export function PendingCard({ action, active, busy, onConfirm, onCancel, onEdit 
             <h3 className="text-[18px] leading-[23px] font-semibold">{d.title}</h3>
             <p className="text-[13.5px] leading-5 text-body">{d.description}</p>
           </div>
-          <div className="grid grid-cols-3 gap-6 border-t border-line px-[18px] pt-3 pb-4">
+          <div className="mx-[18px] grid grid-cols-3 gap-6 border-t border-line pt-3 pb-4">
             <Field label="Categoria">{d.category}</Field>
             <Field label="Prioridade">
               <Dot className={PRIORITY_DOT[d.priority]} />
               {PRIORITY_LABEL[d.priority]}
-              <span className="truncate text-[13.5px] font-normal text-muted">· resposta {formatDeadline(d.sla.dueAt, new Date())}</span>
+              <span className="truncate text-[13.5px] font-normal text-muted">· resposta {formatUntil(d.sla.dueAt, new Date())}</span>
             </Field>
             <Field label="Afetados">{IMPACT_LABEL[d.impact]}</Field>
           </div>
@@ -214,6 +214,9 @@ export function PendingCard({ action, active, busy, onConfirm, onCancel, onEdit 
 }
 
 function Actions({ busy, onConfirm, onCancel, onEdit }: { busy: boolean; onConfirm: () => void; onCancel: () => void; onEdit?: () => void }) {
+  // Detectado depois de montar, para o HTML do servidor e o do navegador baterem.
+  const [mac, setMac] = useState(false);
+  useEffect(() => setMac(isMac()), []);
   return (
     <div className="flex items-center gap-1.5 bg-surface py-2 pr-3.5 pl-2">
       <button
@@ -224,7 +227,7 @@ function Actions({ busy, onConfirm, onCancel, onEdit }: { busy: boolean; onConfi
         <Check className="size-4" />
         {busy ? "Enviando…" : "Confirmar"}
         <kbd className="flex items-center gap-0.5 rounded-md bg-white/15 px-1.5 py-px text-[11.5px] font-normal text-white/80">
-          Ctrl <CornerDownLeft className="size-3" />
+          {mac ? "⌘" : "Ctrl"} <CornerDownLeft className="size-3" />
         </kbd>
       </button>
       {onEdit && (
@@ -332,3 +335,6 @@ function DraftEditor({
     </form>
   );
 }
+
+/** O atalho aparece como ⌘ no Mac e Ctrl no Windows/Linux. */
+const isMac = (): boolean => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent);

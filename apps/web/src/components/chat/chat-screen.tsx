@@ -145,7 +145,15 @@ export function ChatScreen({ initial }: { initial: ChatSnapshot }) {
         <div className="mx-auto flex max-w-[856px] flex-col gap-5 px-6 pt-7 pb-2">
           {messages.length === 0 && !pendingText && <Welcome name={initial.employee.name} onPick={send} />}
           {messages.map((m, i) => (
-            <ChatMessage key={m.id} message={m} conversation={conversation} isLast={i === messages.length - 1} busy={busy} handlers={handlers} />
+            <ChatMessage
+              key={m.id}
+              message={m}
+              conversation={conversation}
+              isLast={i === messages.length - 1}
+              answer={messages[i + 1]?.role === "employee" ? messages[i + 1]?.content : (pendingText ?? undefined)}
+              busy={busy}
+              handlers={handlers}
+            />
           ))}
           {pendingText && (
             <>

@@ -1,4 +1,4 @@
-import { Lock, Mail } from "lucide-react";
+import { KeyRound, Lock, Mail, RotateCcwKey } from "lucide-react";
 import { TopBar } from "@/components/top-bar";
 import { requireSession } from "@/server/auth/current";
 import { getContainer } from "@/server/container";
@@ -18,7 +18,7 @@ export default async function PerfilPage() {
       <span key="e" className="flex flex-col gap-0.5">
         {session.email}
         <span className="flex items-center gap-1 text-[12.5px] font-normal text-muted">
-          <Mail className="size-3" /> Gerenciado pela TI
+          <Lock className="size-3" /> Gerenciado pela TI
         </span>
       </span>,
     ],
@@ -29,7 +29,7 @@ export default async function PerfilPage() {
   return (
     <>
       <TopBar here="Meu perfil" />
-      <main className="overflow-y-auto px-10 py-12">
+      <main className="flex flex-col items-center overflow-y-auto px-10 py-12">
         <div className="flex w-full max-w-[600px] flex-col gap-8">
           <div className="flex flex-col gap-1.5">
             <h1 className="text-2xl font-bold">Meu perfil</h1>
@@ -48,17 +48,23 @@ export default async function PerfilPage() {
           <section className="overflow-hidden rounded-2xl border border-line">
             <div className="flex items-center gap-4 p-6">
               <span className="grid size-10 place-items-center rounded-full bg-surface">
-                <Lock className="size-4 text-body" />
+                <KeyRound className="size-4 text-body" />
               </span>
               <span className="flex flex-1 flex-col gap-0.5">
                 <span className="text-[14.5px] font-semibold">Senha</span>
                 <span className="text-[13.5px] text-muted">Ambiente de demonstração: senha única, definida no servidor</span>
               </span>
-              <button disabled className="h-9 rounded-lg border border-line px-3.5 text-[13.5px] font-medium text-muted" title="Indisponível na demonstração">
+              <button
+                disabled
+                className="flex h-9 items-center gap-[7px] rounded-lg border border-line pr-3.5 pl-3 text-[13.5px] font-medium text-muted"
+                title="Indisponível na demonstração"
+              >
+                <RotateCcwKey className="size-4" />
                 Redefinir senha
               </button>
             </div>
-            <p className="bg-surface px-6 py-3 text-[13px] text-muted">
+            <p className="flex items-start gap-2 bg-surface px-6 py-3 text-[13px] text-muted">
+              <Mail className="mt-0.5 size-3.5 shrink-0" />
               Em produção, a senha seria a da rede Nexo (login corporativo) e o link de redefinição iria para {session.email}.
             </p>
           </section>

@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, MessageSquare, User } from "lucide-react";
+import { LogOut, MessageSquare, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { NexoMark } from "@/components/nexo-mark";
@@ -8,7 +8,7 @@ import { initials } from "@/components/ui";
 
 const NAV = [
   { href: "/atendimento", label: "Atendimento", icon: MessageSquare },
-  { href: "/perfil", label: "Meu perfil", icon: User },
+  { href: "/perfil", label: "Meu perfil", icon: UserRound },
 ];
 
 export function Sidebar({ name, email }: { name: string; email: string }) {
