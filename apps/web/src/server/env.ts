@@ -7,6 +7,10 @@ const EnvSchema = z.object({
   SERVICE_TOKEN: z.string().min(16, "SERVICE_TOKEN precisa ter pelo menos 16 caracteres"),
   APP_DB_URL: z.string().default("file:./data/app.db"),
   APP_DB_AUTH_TOKEN: z.string().optional(),
+  /** Chave que assina o cookie de sessão. Gere um valor aleatório longo. */
+  SESSION_SECRET: z.string().min(32, "SESSION_SECRET precisa ter pelo menos 32 caracteres"),
+  /** Senha única de demonstração. Em produção seria o login corporativo (SSO). */
+  DEMO_PASSWORD: z.string().min(4).default("nexo123"),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

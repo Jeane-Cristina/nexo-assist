@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/*
+ * Tokens do protótipo (nexo.pen). Os nomes viram classes do Tailwind:
+ * text-ink, bg-primary, border-line, etc.
+ */
+@theme {
+  --font-sans: "Schibsted Grotesk Variable", system-ui, sans-serif;
+  --font-serif: "Newsreader Variable", Georgia, serif;
+
+  --color-ink: #1b2431;
+  --color-body: #3d4656;
+  --color-muted: #5b6472;
+  --color-line: #e6e8ec;
+  --color-surface: #f6f7f9;
+  --color-canvas: #eef1f5;
+
+  --color-primary: #0062c4;
+  --color-link: #0069c7;
+  --color-primary-tint: rgb(2 133 247 / 0.07);
+  --color-info: #0285f7;
+
+  --color-success: #00bd6c;
+  --color-success-ink: #00804a;
+  --color-success-tint: rgb(0 189 108 / 0.08);
+
+  --color-warning: #f5a500;
+  --color-warning-ink: #946300;
+  --color-warning-tint: rgb(245 165 0 / 0.09);
+
+  --color-danger: #ee343b;
+  --color-danger-ink: #c4161d;
+  --color-danger-tint: rgb(238 52 59 / 0.07);
+
+  --color-agent-bubble: #e6eefa;
+  --color-human-bubble: #e3f4ea;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Botões e campos herdam a fonte do app */
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
