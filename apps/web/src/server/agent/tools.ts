@@ -8,12 +8,6 @@ import { CATEGORIES, Category, Impact, PRIORITY_LABEL, STATUS_LABEL, TicketType,
 import type { TurnRecorder } from "./recorder";
 import { BLOCKING_LEVELS, classifyPriority } from "./triage";
 
-/**
- * Ferramentas do agent. São criadas por turno, com o funcionário da sessão já
- * "preso" no closure: nenhuma ferramenta recebe e-mail como parâmetro, então o
- * modelo não tem como consultar o chamado de outra pessoa, nem se pedirem.
- */
-
 export type ToolDeps = {
   actor: Actor;
   employee: Employee;
@@ -23,7 +17,6 @@ export type ToolDeps = {
   clock: () => Date;
 };
 
-/** Falha do legado vira resultado (não exceção): o modelo precisa saber o que aconteceu para ser honesto. */
 type ToolFailure = { ok: false; erro: string; mensagem: string };
 
 function failure(err: unknown): ToolFailure {

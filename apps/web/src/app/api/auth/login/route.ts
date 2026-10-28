@@ -12,11 +12,6 @@ const Body = z.object({
   remember: z.boolean().default(true),
 });
 
-/**
- * Login de demonstração: e-mail corporativo existente + senha de demonstração.
- * A mensagem de erro é a mesma para e-mail e senha errados, para não revelar
- * quais e-mails existem.
- */
 export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return Response.json({ error: "Informe e-mail e senha." }, { status: 400 });
@@ -37,8 +32,6 @@ export async function POST(req: Request) {
     throw err;
   }
 
-  // Manter conectado: cookie persistente por 7 dias. Sem marcar: cookie de sessão
-  // (some ao fechar o navegador) e validade de um expediente.
   const ttl = remember ? REMEMBER_TTL_SECONDS : SESSION_TTL_SECONDS;
   const store = await cookies();
   store.set(

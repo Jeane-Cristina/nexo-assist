@@ -12,11 +12,6 @@ import {
   type TicketType,
 } from "../domain/types";
 
-/**
- * Única camada que conhece SQL. Cada linha do banco passa pelo schema zod,
- * então um dado corrompido estoura aqui, e não lá na frente no agent.
- */
-
 const str = (v: unknown): string | null => (v === null || v === undefined ? null : String(v));
 
 const toTicket = (r: Row): Ticket =>
@@ -121,11 +116,6 @@ export class Repository {
     return number ? this.findTicket(String(number)) : null;
   }
 
-  /**
-   * Gera o próximo número (INC-xxxxx / REQ-xxxxx) e grava chamado + evento numa transação.
-   * Com `idempotencyKey`, a chave é gravada na mesma transação: um retry com a mesma
-   * chave nunca cria um segundo chamado.
-   */
   async createTicket(input: NewTicket, now: Date, idempotencyKey?: string): Promise<Ticket> {
     const tx = await this.db.transaction("write");
     try {
@@ -163,7 +153,6 @@ export class Repository {
     }
   }
 
-  /** Aplica mudanças no chamado e registra o evento na mesma operação. */
   async updateTicket(
     number: string,
     changes: TicketChanges,

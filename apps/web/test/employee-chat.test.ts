@@ -4,8 +4,6 @@ import { ChatError, loadChat, pendingAction, sendMessage, startNewConversation }
 import { ServiceDesk } from "../src/server/service-desk";
 import { ANA, createTestEnv, decision, scriptedModel, type TestEnv } from "./helpers";
 
-/** Casos de uso da tela do funcionário: o que os botões e as rotas de API fazem. */
-
 const anaSession: Session = { email: ANA.email, name: ANA.name, role: "employee", exp: 9_999_999_999 };
 const carlaSession: Session = { email: "carla.mendes@nexo.com.br", name: "Carla Mendes", role: "employee", exp: 9_999_999_999 };
 
@@ -27,7 +25,6 @@ beforeEach(async () => {
 });
 afterEach(() => env.cleanup());
 
-/** Leva a conversa até ter um rascunho pendente (o modelo é roteirizado). */
 async function withDraft() {
   const { conversation } = await loadChat(env.deps(scriptedModel([]).model), anaSession);
   const model = scriptedModel([[{ tool: "preparar_rascunho_chamado", args: VPN_DRAFT }], [decision("abrir_chamado", 0.9)], "Confira o rascunho."]).model;
@@ -72,7 +69,7 @@ describe("botões do rascunho", () => {
     const draft = after.pendingAction?.kind === "create" ? after.pendingAction.draft : null;
     expect(draft?.priority).toBe("media");
     expect(draft?.sla.label).toBe("3 dias úteis");
-    expect(after.pendingAction?.id).toBe(pending.id); // mesmo rascunho, nova versão
+    expect(after.pendingAction?.id).toBe(pending.id);
   });
 
   it("Cancelar descarta e avisa", async () => {
@@ -125,7 +122,6 @@ describe("legado fora do ar na confirmação", () => {
     const { conversation, pending } = await withDraft();
     const down = await createTestEnv({ legacyDown: true });
     try {
-      // mesmo banco de conversas, legado indisponível
       const deps = { ...down.deps(scriptedModel([]).model), store: env.store, desk: new ServiceDesk(down.tickets, env.store) };
       const err = await pendingAction(deps, anaSession, { conversationId: conversation.id, pendingId: pending.id, action: "confirm" }).catch((e: unknown) => e);
       expect((err as ChatError).status).toBe(503);

@@ -5,7 +5,6 @@ import { getContainer } from "@/server/container";
 import { getStats, type ServiceDeskStats } from "@/server/stats";
 import { LoginForm } from "./login-form";
 
-/** Tela 1 do protótipo: apresentação do Nexo Assist à esquerda, formulário à direita. */
 export default async function LoginPage() {
   const session = await getSession();
   if (session) redirect(homeFor(session.role));
@@ -29,7 +28,6 @@ export default async function LoginPage() {
             </p>
           </div>
 
-          {/* Prévia ilustrativa de uma conversa, como no protótipo */}
           <div className="pl-24">
             <div className="flex w-[500px] flex-col gap-2.5 rounded-2xl bg-white/[0.04] p-4.5">
               <div className="flex justify-end">
@@ -88,13 +86,12 @@ async function loadStats(): Promise<ServiceDeskStats | null> {
   try {
     return await getStats((await getContainer()).db);
   } catch {
-    return null; // a tela de login nunca deve quebrar por causa das métricas
+    return null;
   }
 }
 
 const formatSeconds = (s: number): string => (s < 60 ? `${Math.max(1, Math.round(s))} s` : `${Math.round(s / 60)} min`);
 
-/** Métricas do rodapé, como no protótipo — mas calculadas dos dados reais. */
 function Stats({ stats }: { stats: ServiceDeskStats | null }) {
   const items: { value: string; label: string; live?: boolean }[] = [
     { value: stats?.avgFirstResponseSeconds != null ? formatSeconds(stats.avgFirstResponseSeconds) : "—", label: "primeira resposta, em média" },

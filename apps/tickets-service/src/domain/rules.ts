@@ -1,7 +1,6 @@
 import { slaFor, type SlaView } from "./sla";
 import { CLOSED_STATUSES, type Ticket } from "./types";
 
-/** Chamados resolvidos há até 7 dias são reabertos em vez de duplicados (Anexo A). */
 export const REOPEN_WINDOW_DAYS = 7;
 const DAY = 24 * 60 * 60_000;
 
@@ -18,7 +17,6 @@ export type TicketView = Ticket & {
   sla: SlaView;
 };
 
-/** Enriquece o chamado com os campos calculados que o agent e as telas consomem. */
 export function toTicketView(ticket: Ticket, now: Date): TicketView {
   const open = isOpen(ticket);
   return {

@@ -5,7 +5,6 @@ import { getContainer } from "@/server/container";
 
 export const dynamic = "force-dynamic";
 
-/** "Meu perfil" do protótipo: dados de acesso (somente leitura). */
 export default async function PerfilPage() {
   const session = await requireSession("employee");
   const { tickets } = await getContainer();

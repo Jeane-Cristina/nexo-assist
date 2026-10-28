@@ -1,7 +1,5 @@
 import type { Priority, TicketStatus } from "@/server/tickets/schemas";
 
-/** Peças visuais pequenas e reaproveitadas, com as cores do protótipo. */
-
 export const PRIORITY_DOT: Record<Priority, string> = {
   critica: "bg-danger",
   alta: "bg-warning",

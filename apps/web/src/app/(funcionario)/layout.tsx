@@ -1,7 +1,6 @@
 import { requireSession } from "@/server/auth/current";
 import { Sidebar } from "./sidebar";
 
-/** Área logada do funcionário: barra lateral fixa + conteúdo. */
 export default async function EmployeeLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession("employee");
   return (

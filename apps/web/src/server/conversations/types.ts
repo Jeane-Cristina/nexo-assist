@@ -2,12 +2,6 @@ import { z } from "zod";
 import { Category, Impact, Priority, TicketType } from "../tickets/schemas";
 import { BLOCKING_LEVELS } from "../agent/triage";
 
-/**
- * Modelo da conversa. Ele é persistido no banco do app (não no serviço de
- * chamados), porque conversa, pausa do agent e transferência são conceitos do
- * atendimento, e não do sistema legado.
- */
-
 export const ConversationStatus = z.enum(["agent", "aguardando_atendente", "em_atendimento", "encerrada"]);
 export type ConversationStatus = z.infer<typeof ConversationStatus>;
 
@@ -30,7 +24,6 @@ export const Transfer = z.object({
   summary: z.string(),
   at: z.string(),
   ticketNumber: z.string().nullable(),
-  /** Confiança do agent no momento, quando a transferência foi por insegurança. */
   confidence: z.number().nullable(),
 });
 export type Transfer = z.infer<typeof Transfer>;
@@ -74,25 +67,19 @@ export const Conversation = z.object({
   focusTicket: z.string().nullable(),
   pendingAction: PendingAction.nullable(),
   employeeMessageCount: z.number(),
-  /** Última confiança registrada pelo agent (aparece no console). */
   lastConfidence: z.number().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 export type Conversation = z.infer<typeof Conversation>;
 
-// ---------------------------------------------------------------------------
-// Mensagens e o que o agent mostra sobre a própria decisão
-
 export const MessageRole = z.enum(["employee", "agent", "analyst", "system"]);
 export type MessageRole = z.infer<typeof MessageRole>;
 
-/** Uma ação do agent, como aparece acima da resposta ("consultou seus chamados"). */
 export const Step = z.object({
   tool: z.string(),
   label: z.string(),
   ok: z.boolean(),
-  /** O que foi pedido à ferramenta e um resumo do que voltou — para o painel de detalhes. */
   input: z.unknown(),
   output: z.unknown(),
 });
@@ -127,15 +114,10 @@ export const INTENT_LABEL: Record<Intent, string> = {
 
 export const Decision = z.object({
   intent: Intent,
-  /** O que o agent fez, em uma frase curta. */
   action: z.string(),
-  /** 0 a 1. null quando o agent não registrou. */
   confidence: z.number().min(0).max(1).nullable(),
-  /** Por que respondeu assim, para o funcionário entender. */
   reason: z.string(),
-  /** Regras de negócio aplicadas pelo código (prioridade, duplicidade, privacidade...). */
   rules: z.array(z.string()),
-  /** Intervenções automáticas do código sobre a decisão do modelo. */
   guardrails: z.array(z.string()),
 });
 export type Decision = z.infer<typeof Decision>;
@@ -163,7 +145,6 @@ export const Card = z.discriminatedUnion("kind", [
 export type Card = z.infer<typeof Card>;
 
 export const MessageMeta = z.object({
-  /** Área de quem escreveu (ex.: "Suporte N2"), para mensagens de analista. */
   authorTitle: z.string().optional(),
   steps: z.array(Step).optional(),
   decision: Decision.optional(),

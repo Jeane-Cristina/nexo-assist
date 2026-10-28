@@ -6,7 +6,6 @@ import { getContainer } from "@/server/container";
 
 export const dynamic = "force-dynamic";
 
-/** Telas 2 e 3: o estado inicial já vem do servidor, sem tela piscando ao abrir. */
 export default async function AtendimentoPage() {
   const session = await requireSession("employee");
   try {

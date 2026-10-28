@@ -52,24 +52,20 @@ export function createApp({ service, serviceToken, instability }: AppDeps) {
 
   app.get("/health", (c) => c.json({ ok: true }));
 
-  // 1) Só o app web conversa com este serviço: token compartilhado em header.
   app.use("*", async (c, next) => {
     const token = c.req.header("x-service-token") ?? "";
     if (!sameSecret(token, serviceToken)) return c.json({ error: "unauthorized" }, 401);
     await next();
   });
 
-  // Rota de demonstração: força a indisponibilidade do "legado" por N segundos.
   app.post("/admin/outage", async (c) => {
     const { seconds } = await body(c, OutageBody);
     const until = instability.forceOutage(seconds);
     return c.json({ ok: true, outageUntil: new Date(until).toISOString() });
   });
 
-  // 2) Daqui para baixo, o serviço se comporta como um legado instável.
   app.use("*", instability.middleware);
 
-  // 3) Toda chamada diz em nome de quem está sendo feita.
   app.use("*", async (c, next) => {
     const email = c.req.header("x-actor-email");
     const role = ActorRole.safeParse(c.req.header("x-actor-role") ?? "employee");
@@ -142,7 +138,6 @@ export function createApp({ service, serviceToken, instability }: AppDeps) {
 
   app.notFound((c) => c.json({ error: "route_not_found" }, 404));
 
-  // Erros viram respostas com código estável — o cliente decide pelo `error`, não pela mensagem.
   app.onError((err, c) => {
     if (err instanceof DomainError) {
       return c.json({ error: err.code, message: err.message }, err.httpStatus as 403 | 404 | 409);

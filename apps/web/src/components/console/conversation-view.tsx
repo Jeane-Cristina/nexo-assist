@@ -10,8 +10,6 @@ import { initials } from "../ui";
 import { systemIcon } from "../timeline-icons";
 import { avatarColors } from "./helpers";
 
-/** Coluna central das telas 4 e 5: a conversa vista pelo analista. */
-
 export type ViewActions = {
   takeOver: () => void;
   returnToAgent: () => void;
@@ -96,7 +94,6 @@ function ConsoleMessage({ message: m, previous }: { message: Message; previous?:
   const [open, setOpen] = useState(false);
   const grouped = previous?.role === m.role && m.role === "employee";
   const fromSupport = m.role === "agent" || m.role === "analyst";
-  // Hora no canto da bolha; nas mensagens do suporte, com o "entregue" (✓✓) do protótipo.
   const time = (
     <span className="flex items-center gap-[3px] self-end pb-px text-[11px] whitespace-nowrap text-muted">
       {formatTime(m.createdAt)}
@@ -160,7 +157,6 @@ function ConsoleMessage({ message: m, previous }: { message: Message; previous?:
   );
 }
 
-/** Os cartões que o funcionário viu, resumidos para o analista. */
 function CardChips({ cards }: { cards: Card[] }) {
   return (
     <span className="flex flex-wrap gap-1">

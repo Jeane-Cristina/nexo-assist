@@ -10,11 +10,6 @@ import { ConversationList } from "./conversation-list";
 import { ConversationView } from "./conversation-view";
 import { TicketPanel } from "./ticket-panel";
 
-/**
- * Console do analista (telas 4 e 5). As respostas dos funcionários chegam por
- * polling: lista a cada 4s, conversa aberta a cada 3s.
- */
-
 const LIST_POLL_MS = 4000;
 const DETAIL_POLL_MS = 3000;
 
@@ -100,7 +95,6 @@ export function ConsoleScreen({ me, initialList }: { me: { email: string; name: 
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Trilho */}
       <nav className="flex w-16 shrink-0 flex-col items-center gap-1.5 bg-surface py-4">
         <span className="grid size-10 place-items-center pb-2">
           <NexoMark size={22} color="#1B2431" />

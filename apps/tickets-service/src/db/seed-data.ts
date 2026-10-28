@@ -1,11 +1,5 @@
 import type { Article, Category, Employee, Impact, Priority, TicketEventKind, TicketStatus, TicketType } from "../domain/types";
 
-/**
- * Dados de exemplo (Anexo B). As datas são relativas ao momento do seed,
- * para que "vencido" e "resolvido há 4 dias" continuem verdadeiros em
- * qualquer dia em que o projeto for rodado.
- */
-
 export const EMPLOYEES: Employee[] = [
   { email: "ana.souza@nexo.com.br", name: "Ana Souza", department: "Financeiro", role: "employee", device: "Notebook Dell Latitude · Windows 11" },
   { email: "carla.mendes@nexo.com.br", name: "Carla Mendes", department: "Comercial", role: "employee", device: "Notebook Lenovo ThinkPad · Windows 11" },
@@ -148,7 +142,6 @@ export const TICKETS: SeedTicket[] = [
     assignee: "juliana.costa@nexo.com.br",
     events: [{ kind: "status", actor: "juliana.costa@nexo.com.br", message: "Senha redefinida. Resolvido.", daysAgo: 109 }],
   },
-  // Chamados de outros funcionários: existem para provar que nunca vazam para a Ana.
   {
     number: "INC-20412",
     type: "INC",

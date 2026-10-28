@@ -1,12 +1,5 @@
 import type { Card, Conversation, Decision, Intent, Step } from "../conversations/types";
 
-/**
- * Caderno de bordo de um turno do agent. Cada ferramenta anota aqui o que fez
- * (passos, regras aplicadas, cartões) e é daqui que sai o painel
- * "por que respondi assim" — a transparência vem dos fatos executados, não de
- * uma explicação que o modelo escreve depois.
- */
-
 export type RecordedDecision = {
   intent: Intent;
   action: string;
@@ -21,13 +14,11 @@ export class TurnRecorder {
   readonly guardrails: string[] = [];
   private cards: Card[] = [];
   decision: RecordedDecision | null = null;
-  /** Conversa sempre na versão mais recente (as ferramentas a atualizam). */
   conversation: Conversation;
   transferred = false;
 
   constructor(
     conversation: Conversation,
-    /** Instante em que o turno começou — usado para impedir "propor e confirmar" no mesmo turno. */
     readonly startedAt: Date,
   ) {
     this.conversation = conversation;
@@ -45,15 +36,10 @@ export class TurnRecorder {
     this.guardrails.push(text);
   }
 
-  /** Um cartão por tipo: o mais recente vence (ex.: consultou dois chamados → mostra o último). */
   card(card: Card): void {
     this.cards = [...this.cards.filter((c) => c.kind !== card.kind), card];
   }
 
-  /**
-   * Cartões finais: rascunho pendente tem prioridade; a lista de chamados só
-   * aparece se nenhum chamado específico foi aberto no turno.
-   */
   finalCards(): Card[] {
     const pending = this.cards.find((c) => c.kind === "pending_action");
     if (pending) return [pending];

@@ -2,10 +2,6 @@ import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { createClient, type Client } from "@libsql/client";
 
-/**
- * libSQL fala o mesmo protocolo para arquivo SQLite local e para o Turso.
- * Assim o "rodar local" e o deploy usam exatamente o mesmo código.
- */
 export function createDb(url: string, authToken?: string): Client {
   if (url.startsWith("file:")) {
     const path = url.slice("file:".length);

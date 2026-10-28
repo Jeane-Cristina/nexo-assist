@@ -1,7 +1,3 @@
-/**
- * `pnpm seed` — apaga e recria os dados de exemplo.
- * Útil antes de uma demonstração, porque as datas são relativas a "agora".
- */
 import { loadConfig } from "../config";
 import { createDb, migrate } from "./client";
 import { seed, wipe } from "./seed";

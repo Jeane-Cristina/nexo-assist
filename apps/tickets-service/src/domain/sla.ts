@@ -1,24 +1,7 @@
 import type { Priority } from "./types";
 
-/**
- * Prazos do Anexo A.
- *
- * - Crítica: 1 hora corrida (chamados críticos têm plantão 24h — artigo da central).
- * - Alta: 4 horas úteis.
- * - Média: 3 dias úteis.
- * - Baixa: 5 dias úteis.
- *
- * Expediente: segunda a sexta, 8h às 18h, horário de Brasília.
- * O prazo vale para a primeira resposta e para cada atualização, então ele é
- * sempre contado a partir da última atualização do suporte.
- *
- * Limitação consciente: feriados não são considerados (ficaria numa tabela
- * de calendário com mais tempo).
- */
-
 export const BUSINESS_START_HOUR = 8;
 export const BUSINESS_END_HOUR = 18;
-/** America/Sao_Paulo não tem horário de verão desde 2019, então o offset é fixo. */
 const TZ_OFFSET_MINUTES = -3 * 60;
 const MINUTE = 60_000;
 
@@ -34,11 +17,6 @@ export const SLA_RULES: Record<Priority, SlaRule> = {
   baixa: { kind: "business_days", amount: 5, label: "5 dias úteis" },
 };
 
-/*
- * Truque para trabalhar em horário local sem biblioteca de timezone:
- * deslocamos o instante pelo offset e usamos os getters UTC como se fossem
- * os campos do relógio de Brasília. No fim, desfazemos o deslocamento.
- */
 const toLocal = (d: Date): Date => new Date(d.getTime() + TZ_OFFSET_MINUTES * MINUTE);
 const fromLocal = (d: Date): Date => new Date(d.getTime() - TZ_OFFSET_MINUTES * MINUTE);
 
@@ -59,7 +37,6 @@ const nextDay = (local: Date): Date => {
   return d;
 };
 
-/** Leva um instante (local) para o próximo momento dentro do expediente. */
 function normalizeToBusinessTime(local: Date): Date {
   let d = new Date(local);
   if (isWeekday(d) && d.getUTCHours() < BUSINESS_START_HOUR) {
@@ -87,7 +64,6 @@ export function addBusinessMinutes(start: Date, minutes: number): Date {
   }
 }
 
-/** Soma dias úteis mantendo o horário (normalizado para dentro do expediente). */
 export function addBusinessDays(start: Date, days: number): Date {
   let cursor = normalizeToBusinessTime(toLocal(start));
   let added = 0;

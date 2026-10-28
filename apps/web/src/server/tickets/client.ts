@@ -11,19 +11,6 @@ import {
   type TicketType,
 } from "./schemas";
 
-/**
- * Cliente do serviço de chamados (o "sistema legado").
- *
- * O PRD avisa que ele fica indisponível por alguns segundos de vez em quando.
- * Estratégia:
- * - timeout por tentativa, para não prender o funcionário esperando;
- * - retry com backoff exponencial só para falhas transitórias (503/502/504, rede, timeout);
- * - POST só é repetido quando é seguro: o legado respondeu 503 antes de processar,
- *   ou a requisição leva chave de idempotência;
- * - quando as tentativas acabam, sobe um erro tipado (`unavailable`) que o agent
- *   transforma numa resposta honesta para o funcionário.
- */
-
 export type Actor = { email: string; role: "employee" | "analyst" };
 
 export type TicketsErrorKind = "unavailable" | "not_found" | "conflict" | "forbidden" | "validation" | "unknown";
@@ -31,7 +18,6 @@ export type TicketsErrorKind = "unavailable" | "not_found" | "conflict" | "forbi
 export class TicketsError extends Error {
   constructor(
     readonly kind: TicketsErrorKind,
-    /** Código estável devolvido pelo serviço (ex.: reopen_window_expired). */
     readonly code: string,
     message: string,
   ) {
@@ -157,7 +143,6 @@ export class TicketsClient {
           signal: AbortSignal.timeout(timeoutMs),
         });
       } catch {
-        // Rede/timeout: não sabemos se o servidor processou. Só repete se for seguro.
         lastError = new TicketsError("unavailable", "network", "Não foi possível falar com o sistema de chamados.");
         if (method !== "GET" && !idempotencyKey) break;
         if (attempt < attempts) await this.sleep(Math.min(baseDelayMs * 2 ** (attempt - 1), maxDelayMs));
@@ -172,7 +157,6 @@ export class TicketsClient {
 
       if (res.status === 503 || res.status === 502 || res.status === 504) {
         lastError = new TicketsError("unavailable", code, message);
-        // 503 do legado acontece antes de processar: repetir é seguro mesmo em POST.
         const safeToRetry = method === "GET" || res.status === 503 || Boolean(idempotencyKey);
         if (!safeToRetry) break;
         if (attempt < attempts) {

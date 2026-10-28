@@ -11,8 +11,6 @@ import {
 import { loadChat, sendMessage } from "../src/server/chat/employee-chat";
 import { ANA, createTestEnv, decision, scriptedModel, type TestEnv } from "./helpers";
 
-/** Console do analista: fila, assumir com o agent pausado, devolver e encerrar. */
-
 const ana: Session = { email: ANA.email, name: ANA.name, role: "employee", exp: 9_999_999_999 };
 const rafael: Session = { email: "rafael.lima@nexo.com.br", name: "Rafael Lima", role: "analyst", department: "Suporte N2", exp: 9_999_999_999 };
 const juliana: Session = { email: "juliana.costa@nexo.com.br", name: "Juliana Costa", role: "analyst", department: "Suporte N1", exp: 9_999_999_999 };
@@ -25,7 +23,6 @@ beforeEach(async () => {
 });
 afterEach(() => env.cleanup());
 
-/** Ana consulta o INC-20311 e pede um analista (o modelo é roteirizado). */
 async function anaTransfers() {
   const { conversation } = await loadChat(noModel(), ana);
   await sendMessage(
@@ -52,7 +49,6 @@ describe("fila de conversas", () => {
     const conv = await anaTransfers();
     const { items, counts } = await listConversations(noModel(), rafael, { filter: "para_voce" });
     expect(items.map((i) => i.conversation.id)).toEqual([conv.id]);
-    // o último item da linha do tempo é o marco da transferência, depois da resposta do agent
     expect(items[0]?.lastMessage).toMatchObject({ role: "system", content: "Transferida para um analista · funcionário pediu um analista" });
     expect(counts).toMatchObject({ para_voce: 1, com_agent: 0, minhas: 0, todas: 1 });
   });
@@ -87,14 +83,13 @@ describe("assumir o atendimento", () => {
   it("com o analista atendendo, a mensagem da funcionária NÃO chama o modelo", async () => {
     const conv = await anaTransfers();
     await takeOver(noModel(), rafael, conv.id);
-    // roteiro vazio: se o modelo for chamado, o teste quebra
     const r = await sendMessage(noModel(), ana, { conversationId: conv.id, text: "Posso sim, está ligado." });
     expect(r.kind).toBe("paused");
   });
 
   it("só quem assumiu responde; outro analista não assume, não devolve e não encerra", async () => {
     const conv = await anaTransfers();
-    await expect(sendAnalystMessage(noModel(), rafael, conv.id, "Oi")).rejects.toMatchObject({ status: 409 }); // ainda não assumiu
+    await expect(sendAnalystMessage(noModel(), rafael, conv.id, "Oi")).rejects.toMatchObject({ status: 409 });
     await takeOver(noModel(), rafael, conv.id);
     const msg = await sendAnalystMessage(noModel(), rafael, conv.id, "Oi, Ana! Aqui é o Rafael.");
     expect(msg).toMatchObject({ role: "analyst", authorName: "Rafael Lima", meta: { authorTitle: "Suporte N2" } });
@@ -123,7 +118,6 @@ describe("devolver e encerrar", () => {
     expect((await env.store.require(conv.id)).status).toBe("encerrada");
     const again = await loadChat(noModel(), ana);
     expect(again.conversation.id).not.toBe(conv.id);
-    // mas o polling da tela antiga ainda enxerga o encerramento
     const old = await loadChat(noModel(), ana, conv.id);
     expect(old.conversation.status).toBe("encerrada");
   });

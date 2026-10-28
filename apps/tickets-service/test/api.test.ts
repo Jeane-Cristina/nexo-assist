@@ -14,7 +14,6 @@ const TOKEN = "token-de-teste-com-16+chars";
 const ANA = "ana.souza@nexo.com.br";
 const CARLA = "carla.mendes@nexo.com.br";
 const RAFAEL = "rafael.lima@nexo.com.br";
-// Quarta-feira, 10h em Brasília.
 const NOW = new Date("2026-10-28T13:00:00.000Z");
 
 let dir: string;
@@ -22,7 +21,6 @@ let testIndex = 0;
 let db: Client;
 let app: ReturnType<typeof createApp>;
 let instability: ReturnType<typeof createInstability>;
-/** Avança o relógio falso da instabilidade (usado no teste de indisponibilidade). */
 let advanceClock: (ms: number) => void;
 
 type Opts = { actor?: string; role?: "employee" | "analyst"; body?: unknown; method?: string; token?: string };
@@ -46,9 +44,6 @@ beforeAll(() => {
 });
 
 beforeEach(async () => {
-  // Arquivo temporário (e não :memory:) porque transações do libsql abrem outra conexão.
-  // Um arquivo por teste: no Windows o handle do SQLite pode continuar preso por alguns
-  // instantes depois do close(), então não dá para apagar e recriar o mesmo arquivo.
   testIndex += 1;
   db = createDb(`file:${join(dir, `test-${testIndex}.db`)}`);
   await migrate(db);
@@ -66,12 +61,9 @@ afterEach(() => {
 });
 
 afterAll(() => {
-  // Limpeza é "melhor esforço": se o Windows ainda segurar algum arquivo,
-  // a pasta fica no temp do sistema e não deve derrubar a suíte.
   try {
     rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   } catch {
-    /* ignorado de propósito */
   }
 });
 
@@ -88,8 +80,8 @@ describe("consulta de chamados", () => {
     expect(status).toBe(200);
     const numbers = json.tickets.map((t: any) => t.number);
     expect(numbers).toEqual(expect.arrayContaining(["INC-20311", "INC-20298", "REQ-10442"]));
-    expect(numbers).not.toContain("INC-20412"); // é da Carla
-    expect(numbers).not.toContain("INC-20150"); // resolvido
+    expect(numbers).not.toContain("INC-20412");
+    expect(numbers).not.toContain("INC-20150");
     const lento = json.tickets.find((t: any) => t.number === "INC-20311");
     expect(lento.sla).toMatchObject({ label: "3 dias úteis", overdue: true });
   });

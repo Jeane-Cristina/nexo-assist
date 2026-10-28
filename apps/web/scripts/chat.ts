@@ -1,10 +1,3 @@
-/**
- * `pnpm --filter web chat` — conversa com o agent pelo terminal, como a Ana Souza.
- * Serve para testar o agent antes (e independente) da interface.
- *
- * Comandos: /confirmar  /cancelar  /nova  /sair
- * Opcional: CHAT_AS=carla.mendes@nexo.com.br para falar como outra pessoa.
- */
 import { createInterface } from "node:readline/promises";
 import { handleEmployeeMessage } from "../src/server/agent/run-turn";
 import { getContainer } from "../src/server/container";

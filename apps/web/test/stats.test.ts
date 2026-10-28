@@ -2,8 +2,6 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { getStats, touchPresence } from "../src/server/stats";
 import { createTestEnv, type TestEnv } from "./helpers";
 
-/** Métricas da tela de login, calculadas dos dados reais. */
-
 let env: TestEnv;
 beforeEach(async () => {
   env = await createTestEnv();
@@ -18,7 +16,6 @@ describe("métricas do service desk", () => {
   });
 
   it("calcula 1ª resposta média e % resolvidos sem fila", async () => {
-    // relógio do ambiente de teste anda 1s por leitura: cada resposta leva ~1s
     const a = await env.store.create({ email: "a@nexo.com.br", name: "A" });
     await env.store.appendMessage(a.id, { role: "employee", content: "oi" });
     await env.store.appendMessage(a.id, { role: "agent", content: "olá" });

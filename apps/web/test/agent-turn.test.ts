@@ -3,12 +3,6 @@ import { handleEmployeeMessage } from "../src/server/agent/run-turn";
 import type { Conversation } from "../src/server/conversations/types";
 import { ANA, createTestEnv, decision, scriptedModel, type ScriptStep, type TestEnv } from "./helpers";
 
-/**
- * Testes do orquestrador com um modelo roteirizado. O roteiro faz o papel do
- * LLM; o que está sendo testado é tudo em volta dele: ferramentas, regras,
- * barreiras de segurança, persistência e transparência.
- */
-
 let env: TestEnv;
 let conversation: Conversation;
 
@@ -23,7 +17,6 @@ async function turn(text: string, script: ScriptStep[]) {
   const scripted = scriptedModel(script);
   const result = await handleEmployeeMessage(env.deps(scripted.model), { conversation, employee: ANA, text });
   conversation = result.conversation;
-  // A resposta do agent (depois dela pode vir o marco "Transferida...").
   const agentMsg = [...result.messages].reverse().find((m) => m.role === "agent") ?? result.messages.at(-1)!;
   return { result, scripted, agentMsg };
 }
@@ -59,7 +52,7 @@ describe("transparência", () => {
     const prompt = JSON.stringify(scripted.prompts[0]);
     expect(prompt).toContain("Oi");
     expect(prompt).toContain("Olá! Como posso ajudar?");
-    expect(prompt).toContain("Windows 11"); // equipamento no contexto
+    expect(prompt).toContain("Windows 11");
   });
 });
 
@@ -82,7 +75,6 @@ describe("abertura de chamado com rascunho e confirmação", () => {
     expect(first.agentMsg.meta.decision?.rules).toEqual(
       expect.arrayContaining(["Prioridade alta: Há um compromisso hoje que depende disso."]),
     );
-    // Nada criado ainda
     const before = await env.tickets.listTickets({ email: ANA.email, role: "employee" }, { scope: "open" });
     expect(before.some((t) => t.title === VPN_DRAFT.titulo)).toBe(false);
 
@@ -216,7 +208,6 @@ describe("transferência", () => {
     const ticket = await env.tickets.getTicket({ email: ANA.email, role: "employee" }, "INC-20311");
     expect(ticket.events.at(-1)).toMatchObject({ kind: "transferido" });
 
-    // O modelo NÃO pode ser chamado: roteiro vazio estouraria.
     const paused = await turn("Alguém aí?", []);
     expect(paused.result.kind).toBe("paused");
     expect(paused.agentMsg.role).toBe("employee");
@@ -265,7 +256,6 @@ describe("limites e falhas", () => {
       calls++;
       throw new Error("503 high demand");
     };
-    // o Mastra ainda faz uma nova tentativa no mesmo modelo (maxRetries: 1)
     const primary = scriptedModel([[{ tool: "listar_meus_chamados", args: { incluirEncerrados: false } }], busy, busy]);
     const reserve = scriptedModel([]);
     const result = await handleEmployeeMessage(env.deps(primary.model, reserve.model), { conversation, employee: ANA, text: "meus chamados" });
@@ -294,7 +284,6 @@ describe("legado fora do ar", () => {
       "O sistema de chamados está instável agora. Tente de novo em instantes.",
     ]);
     expect(agentMsg.meta.steps?.[0]).toMatchObject({ ok: false, label: "tentou consultar seus chamados" });
-    // O resultado da ferramenta que o modelo recebeu explica a falha.
     expect(JSON.stringify(scripted.prompts.at(-1))).toContain("sistema_indisponivel");
   });
 });

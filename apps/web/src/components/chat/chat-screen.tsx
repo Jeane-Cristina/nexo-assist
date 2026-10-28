@@ -7,11 +7,6 @@ import { MAX_EMPLOYEE_MESSAGES, type Conversation, type DraftTicket, type Messag
 import { TopBar } from "../top-bar";
 import { ChatMessage } from "./messages";
 
-/**
- * Tela de atendimento do funcionário (telas 2 e 3 do protótipo).
- * O estado vem do servidor; a tela só envia ações e mostra o resultado.
- */
-
 const POLL_MS = 3000;
 
 async function api<T>(path: string, body?: unknown): Promise<T> {
@@ -38,17 +33,15 @@ export function ChatScreen({ initial }: { initial: ChatSnapshot }) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length, pendingText, busy]);
 
-  // Com um analista na conversa, as respostas chegam de fora: consulta o servidor a cada 3s.
   useEffect(() => {
     if (!paused) return;
-    const timer = setInterval(async () => {
-      try {
-        const snap = await api<ChatSnapshot>(`/api/chat?conversationId=${conversation.id}`);
-        setConversation(snap.conversation);
-        setMessages(snap.messages);
-      } catch {
-        /* tenta de novo no próximo ciclo */
-      }
+    const timer = setInterval(() => {
+      api<ChatSnapshot>(`/api/chat?conversationId=${conversation.id}`)
+        .then((snap) => {
+          setConversation(snap.conversation);
+          setMessages(snap.messages);
+        })
+        .catch(() => undefined);
     }, POLL_MS);
     return () => clearInterval(timer);
   }, [paused, conversation.id]);

@@ -1,27 +1,15 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 
-/**
- * Sessão em cookie assinado (HMAC-SHA256), sem estado no servidor.
- *
- * - O conteúdo é visível (base64), mas não pode ser alterado: qualquer mudança
- *   invalida a assinatura. Por isso a Ana não consegue "virar" a Carla editando o cookie.
- * - O cookie é httpOnly: o JavaScript da página não lê, o que protege contra roubo via XSS.
- * - É a mesma ideia de um JWT, sem a biblioteca.
- */
-
 export const SESSION_COOKIE = "nexo_session";
-export const SESSION_TTL_SECONDS = 60 * 60 * 12; // um expediente
-/** "Manter conectado neste computador". */
+export const SESSION_TTL_SECONDS = 60 * 60 * 12;
 export const REMEMBER_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 export const Session = z.object({
   email: z.string(),
   name: z.string(),
   role: z.enum(["employee", "analyst"]),
-  /** Área (ex.: "Suporte N2") — aparece ao lado do nome do analista nas mensagens. */
   department: z.string().optional(),
-  /** Expiração em segundos desde a época. */
   exp: z.number(),
 });
 export type Session = z.infer<typeof Session>;
@@ -54,7 +42,6 @@ export function decodeSession(token: string | undefined, secret: string, now: Da
   }
 }
 
-/** Comparação de senha em tempo constante (evita descobrir a senha medindo o tempo de resposta). */
 export function samePassword(given: string, expected: string): boolean {
   const a = createHmac("sha256", "cmp").update(given).digest();
   const b = createHmac("sha256", "cmp").update(expected).digest();

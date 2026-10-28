@@ -2,11 +2,9 @@ import { describe, expect, it } from "vitest";
 import { canReopen, isOpen } from "../src/domain/rules";
 import { addBusinessMinutes, computeDueAt, slaFor } from "../src/domain/sla";
 
-/** Monta um instante no horário de Brasília (-03:00). */
 const br = (isoLocal: string): Date => new Date(`${isoLocal}-03:00`);
 const iso = (isoLocal: string): string => br(isoLocal).toISOString();
 
-// 28/10/2026 é uma quarta-feira.
 describe("prazo de prioridade alta (4 horas úteis)", () => {
   it("soma dentro do mesmo dia", () => {
     expect(computeDueAt("alta", br("2026-10-28T10:00:00")).toISOString()).toBe(iso("2026-10-28T14:00:00"));

@@ -1,9 +1,5 @@
 @import "tailwindcss";
 
-/*
- * Tokens do protótipo (nexo.pen). Os nomes viram classes do Tailwind:
- * text-ink, bg-primary, border-line, etc.
- */
 @theme {
   --font-sans: "Schibsted Grotesk Variable", system-ui, sans-serif;
   --font-serif: "Newsreader Variable", Georgia, serif;
@@ -36,11 +32,6 @@
   --color-human-bubble: #e3f4ea;
 }
 
-/*
- * Estilos base dentro de @layer base: assim as classes do Tailwind (camada utilities)
- * continuam valendo. Fora da camada, "font: inherit" anulava o tamanho de fonte
- * de todos os botões e campos.
- */
 @layer base {
   html,
   body {

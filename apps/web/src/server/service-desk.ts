@@ -6,25 +6,15 @@ import { formatDeadline } from "./format";
 import { TicketsError, type Actor, type TicketsClient } from "./tickets/client";
 import { PRIORITY_LABEL, STATUS_LABEL, type Ticket } from "./tickets/schemas";
 
-/**
- * Operações determinísticas do atendimento. São chamadas tanto pelas
- * ferramentas do agent quanto pelos botões da interface (Confirmar, Cancelar,
- * Assumir...). Regra crítica mora aqui, não no prompt: o modelo pode errar,
- * estas funções não deixam o erro virar efeito.
- */
-
 export type ConfirmOutcome = {
   ticket: Ticket;
   kind: "criado" | "atualizado" | "reaberto";
-  /** Frase pronta para o funcionário, com número e prazo. */
   summary: string;
-  /** Preenchido quando a confirmação disparou transferência automática (ex.: chamado crítico). */
   autoTransfer: TransferOutcome | null;
 };
 
 export type TransferOutcome = {
   conversation: Conversation;
-  /** Expectativa de contato, para o agent repassar ao funcionário. */
   contactEstimate: string;
   ticketUpdated: boolean;
 };
@@ -54,15 +44,10 @@ export class ServiceDesk {
     return this.store.require(conversation.id);
   }
 
-  /** Chamado "em foco" na conversa: aparece no console do analista e recebe o resumo na transferência. */
   setFocusTicket(conversation: Conversation, number: string): Promise<Conversation> {
     return this.store.update(conversation.id, { focusTicket: number });
   }
 
-  // -------------------------------------------------------------------------
-  // Rascunho → confirmação
-
-  /** Monta o rascunho com prioridade calculada e prazo vindo do serviço. Não cria nada. */
   async draftTicket(
     actor: Actor,
     conversation: Conversation,
@@ -80,7 +65,6 @@ export class ServiceDesk {
     return { conversation: updated, action };
   }
 
-  /** Edição feita pelo funcionário no cartão do rascunho: recalcula prioridade e prazo. */
   async editDraft(
     actor: Actor,
     conversation: Conversation,
@@ -114,10 +98,6 @@ export class ServiceDesk {
     return this.store.update(conversation.id, { pendingAction: null });
   }
 
-  /**
-   * Executa a ação pendente. `expectedId` garante que se confirma exatamente o
-   * rascunho que o funcionário viu — nem uma versão anterior, nem outra.
-   */
   async confirmPending(actor: Actor, conversation: Conversation, expectedId: string): Promise<ConfirmOutcome> {
     const pending = conversation.pendingAction;
     if (!pending || pending.id !== expectedId) {
@@ -132,7 +112,6 @@ export class ServiceDesk {
       const created = await this.tickets.createTicket(
         actor,
         { type: draft.type, title: draft.title, description: draft.description, category: draft.category, priority: draft.priority, impact: draft.impact },
-        // A chave do rascunho torna o retry seguro: nunca dois chamados para o mesmo rascunho.
         `${conversation.id}:${pending.id}`,
       );
       ticket = created.ticket;
@@ -156,7 +135,6 @@ export class ServiceDesk {
       `${verb} o chamado ${ticket.number} com prioridade ${PRIORITY_LABEL[ticket.priority].toLowerCase()}. ` +
       `Um analista responde até ${formatDeadline(ticket.sla.dueAt, now)} (prazo de ${ticket.sla.label}).`;
 
-    // Regra do Anexo A: caso crítico vai direto para um analista.
     let autoTransfer: TransferOutcome | null = null;
     if (ticket.priority === "critica" && updated.status === "agent") {
       autoTransfer = await this.transfer(actor, updated, {
@@ -169,15 +147,6 @@ export class ServiceDesk {
     return { ticket, kind, summary, autoTransfer };
   }
 
-  // -------------------------------------------------------------------------
-  // Transferência e console do analista
-
-  /**
-   * Marca a conversa como aguardando atendente (o agent para de responder) e,
-   * se houver chamado em foco, registra o resumo nele. Se o legado estiver
-   * fora do ar, a conversa é transferida mesmo assim: o funcionário não pode
-   * ficar preso por causa do sistema de chamados.
-   */
   async transfer(
     actor: Actor,
     conversation: Conversation,
@@ -212,10 +181,6 @@ export class ServiceDesk {
     return { conversation: updated, contactEstimate, ticketUpdated };
   }
 
-  /**
-   * Marco "Transferida..." na linha do tempo. Fica separado de transfer() para
-   * entrar DEPOIS da resposta do agent que avisou o funcionário, como no protótipo.
-   */
   async markTransferred(conversation: Conversation): Promise<void> {
     if (!conversation.transfer) return;
     await this.store.appendMessage(conversation.id, {
@@ -230,7 +195,7 @@ export class ServiceDesk {
     if (conversation.focusTicket) {
       await this.tickets
         .setStatus({ email: analyst.email, role: "analyst" }, conversation.focusTicket, "em_atendimento", `Assumido por ${analyst.name}.`)
-        .catch(() => undefined); // o status do chamado não pode impedir o atendimento
+        .catch(() => undefined);
     }
     await this.store.appendMessage(conversation.id, { role: "system", content: `${analyst.name} assumiu · agent pausado` });
     return updated;
@@ -248,11 +213,9 @@ export class ServiceDesk {
     return updated;
   }
 
-  /** Cartão de ação pendente, como aparece no chat. */
   static pendingCard(action: PendingAction): Card {
     return { kind: "pending_action", action };
   }
 }
 
-/** "D-381": curto o bastante para o funcionário citar no chat. */
 const newDraftId = (): string => `D-${randomInt(100, 1000)}`;

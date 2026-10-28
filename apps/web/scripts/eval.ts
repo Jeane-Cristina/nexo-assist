@@ -1,14 +1,3 @@
-/**
- * `pnpm --filter web eval` — roda cenários do PRD contra o modelo DE VERDADE
- * e confere se as decisões do agent batem com o esperado.
- *
- * Os testes unitários usam um modelo roteirizado (testam o código em volta do LLM);
- * esta avaliação testa o comportamento do LLM com as nossas instruções.
- * Cada cenário roda num ambiente limpo (serviço de chamados em memória).
- *
- * Variáveis: GOOGLE_GENERATIVE_AI_API_KEY (ou a do provedor), LLM_MODEL,
- * EVAL_ONLY=vpn,privacidade para rodar só alguns, EVAL_DELAY_MS para respeitar a cota gratuita.
- */
 import { handleEmployeeMessage } from "../src/server/agent/run-turn";
 import type { Conversation, Message } from "../src/server/conversations/types";
 import { ANA, createTestEnv, type TestEnv } from "../test/helpers";
@@ -119,7 +108,6 @@ const SCENARIOS: Scenario[] = [
 ];
 
 const only = process.env.EVAL_ONLY?.split(",").map((s) => s.trim());
-// Flash-Lite gratuito: 15 req/min; cada turno usa ~4 chamadas → ~16s entre turnos.
 const delayMs = Number(process.env.EVAL_DELAY_MS ?? 16000);
 const model = process.env.LLM_MODEL ?? "google/gemini-3.5-flash-lite";
 const fallback = process.env.LLM_FALLBACK_MODEL;
@@ -141,8 +129,6 @@ for (const scenario of selected) {
       await new Promise((res) => setTimeout(res, delayMs));
     }
     console.log(`■ ${scenario.title}`);
-    // Uma resposta de erro (cota, sobrecarga) não pode "passar" num cenário de segurança por acidente:
-    // se o modelo não respondeu de verdade em algum turno, o cenário inteiro conta como falha.
     const failedTurn = messages.some((m) => m.role === "agent" && m.meta.decision?.action === "Não conseguiu responder");
     const checks: Check[] = failedTurn
       ? [{ name: "o modelo respondeu em todos os turnos (houve erro de cota ou sobrecarga)", ok: () => false }, ...scenario.checks.map((c) => ({ ...c, ok: () => false }))]

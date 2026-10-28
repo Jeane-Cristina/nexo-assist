@@ -5,13 +5,6 @@ import { toTicketSummary } from "../service-desk";
 import { TicketsError, type Actor } from "../tickets/client";
 import { PRIORITY_LABEL, type Employee } from "../tickets/schemas";
 
-/**
- * Casos de uso da tela do funcionário. As rotas de API só fazem HTTP
- * (ler corpo, devolver JSON); a lógica fica aqui, testável sem Next.js.
- *
- * Toda função recebe a SESSÃO, nunca um e-mail vindo do navegador.
- */
-
 export type ChatSnapshot = { employee: Employee; conversation: Conversation; messages: Message[] };
 
 export type ChatDeps = TurnDeps;
@@ -27,7 +20,6 @@ export class ChatError extends Error {
 
 const actorOf = (session: Session): Actor => ({ email: session.email, role: "employee" });
 
-/** Perfil do funcionário em memória por alguns minutos: poupa o legado instável a cada mensagem. */
 const profileCache = new Map<string, { employee: Employee; until: number }>();
 const PROFILE_TTL_MS = 5 * 60_000;
 
@@ -46,11 +38,6 @@ async function employeeOf(deps: ChatDeps, session: Session): Promise<Employee> {
   }
 }
 
-/**
- * Abre a conversa em andamento (ou começa uma) — é o "voltar outro dia e continuar".
- * Com `conversationId` (usado no polling), devolve aquela conversa, mesmo encerrada,
- * para a tela mostrar o encerramento em vez de trocar de conversa sozinha.
- */
 export async function loadChat(deps: ChatDeps, session: Session, conversationId?: string): Promise<ChatSnapshot> {
   const employee = await employeeOf(deps, session);
   const requested = conversationId ? await deps.store.get(conversationId) : null;
@@ -64,7 +51,6 @@ export async function loadChat(deps: ChatDeps, session: Session, conversationId?
 
 async function ownConversation(deps: ChatDeps, session: Session, conversationId: string): Promise<Conversation> {
   const conversation = await deps.store.get(conversationId);
-  // Conversa de outra pessoa responde igual a inexistente.
   if (!conversation || conversation.employeeEmail !== session.email) throw new ChatError(404, "Conversa não encontrada.");
   if (conversation.status === "encerrada") throw new ChatError(409, "Esta conversa foi encerrada. Comece uma nova.");
   return conversation;
@@ -83,10 +69,6 @@ export async function sendMessage(
 
 export type DraftEdits = Partial<Pick<DraftTicket, "title" | "description" | "category" | "impact" | "blocking" | "deadlineToday">>;
 
-/**
- * Botões do cartão de rascunho. Confirmar e cancelar não passam pelo modelo:
- * são ações determinísticas, com a resposta montada pelo código.
- */
 export async function pendingAction(
   deps: ChatDeps,
   session: Session,
@@ -169,7 +151,6 @@ export async function pendingAction(
   }
 }
 
-/** Começa uma conversa nova (a anterior é encerrada). Não vale se um analista estiver atendendo. */
 export async function startNewConversation(deps: ChatDeps, session: Session, currentId: string): Promise<ChatSnapshot> {
   const current = await deps.store.get(currentId);
   if (current && current.employeeEmail === session.email && current.status !== "encerrada") {

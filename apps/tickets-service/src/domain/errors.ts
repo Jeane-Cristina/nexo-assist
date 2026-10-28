@@ -15,7 +15,6 @@ const HTTP_STATUS: Record<DomainErrorCode, number> = {
   unknown_employee: 404,
 };
 
-/** Erro de regra de negócio: tem código estável (o agent decide pelo código, não pela mensagem). */
 export class DomainError extends Error {
   readonly code: DomainErrorCode;
   readonly httpStatus: number;

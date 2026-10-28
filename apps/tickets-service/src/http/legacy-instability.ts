@@ -1,14 +1,5 @@
 import type { MiddlewareHandler } from "hono";
 
-/**
- * O PRD avisa: "o sistema de chamados é legado e, de vez em quando, fica
- * indisponível por alguns segundos". Este middleware reproduz isso de forma
- * controlada, para que o agent precise lidar com falha de verdade:
- *
- * - latência aleatória em toda requisição;
- * - uma fração das requisições falha com 503;
- * - uma janela de indisponibilidade pode ser forçada (POST /admin/outage) para demonstrar.
- */
 export type InstabilityOptions = {
   failureRate: number;
   maxLatencyMs: number;

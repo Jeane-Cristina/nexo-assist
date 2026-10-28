@@ -6,15 +6,10 @@ import { slaFor } from "./sla";
 import type { ActorRole, Category, Employee, Impact, Priority, TicketEvent, TicketStatus } from "./types";
 import { CLOSED_STATUSES } from "./types";
 
-/** Quem está pedindo. Vem do app web (sessão), nunca do texto do chat. */
 export type Actor = { email: string; role: ActorRole };
 
 export type TicketDetail = TicketView & { events: TicketEvent[] };
 
-/**
- * Casos de uso do serviço de chamados. Toda regra de permissão mora aqui:
- * funcionário só enxerga e mexe nos próprios chamados; analista vê todos.
- */
 export class TicketService {
   constructor(
     private readonly repo: Repository,
@@ -44,7 +39,6 @@ export class TicketService {
     return { ...toTicketView(ticket, this.clock()), events };
   }
 
-  /** `replayed: true` quando a mesma chave de idempotência já tinha criado o chamado. */
   async createTicket(
     actor: Actor,
     input: Omit<NewTicket, "requesterEmail">,
@@ -60,17 +54,11 @@ export class TicketService {
     return { ticket: toTicketView(created, this.clock()), replayed: false };
   }
 
-  /** Prévia do prazo para o rascunho, sem duplicar a regra de SLA fora deste serviço. */
   previewSla(priority: Priority): { label: string; dueAt: string } {
     const { label, dueAt } = slaFor(priority, this.clock(), true, this.clock());
     return { label, dueAt };
   }
 
-  /**
-   * Complemento do funcionário ou atualização do analista.
-   * Só a atualização do suporte reinicia o prazo: o funcionário complementar
-   * não conta como "o service desk respondeu".
-   */
   async addUpdate(actor: Actor, number: string, message: string): Promise<TicketView> {
     const ticket = await this.loadVisible(actor, number);
     if (!isOpen(ticket)) {
@@ -100,7 +88,6 @@ export class TicketService {
     return toTicketView(updated, now);
   }
 
-  /** Resolvido há até 7 dias volta a ficar aberto (em vez de virar duplicado). */
   async reopen(actor: Actor, number: string, message: string): Promise<TicketView> {
     const ticket = await this.loadVisible(actor, number);
     const now = this.clock();
@@ -119,7 +106,6 @@ export class TicketService {
     return toTicketView(updated, now);
   }
 
-  /** Marca o chamado para atendimento humano, com o resumo que o analista vai ler. */
   async transfer(actor: Actor, number: string, summary: string): Promise<TicketView> {
     const ticket = await this.loadVisible(actor, number);
     if (!isOpen(ticket)) throw new DomainError("ticket_closed", `O chamado ${ticket.number} está encerrado.`);
@@ -156,10 +142,6 @@ export class TicketService {
     return searchArticles(await this.repo.listArticles(), query);
   }
 
-  /**
-   * Chamado de outra pessoa responde 404, não 403: assim nem a existência
-   * do número vaza para quem não é o dono.
-   */
   private async loadVisible(actor: Actor, number: string) {
     const ticket = await this.repo.findTicket(number);
     if (!ticket || (actor.role === "employee" && ticket.requesterEmail !== actor.email.toLowerCase())) {

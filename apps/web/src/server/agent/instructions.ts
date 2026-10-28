@@ -2,14 +2,6 @@ import type { Conversation } from "../conversations/types";
 import { formatFull } from "../format";
 import type { Employee } from "../tickets/schemas";
 
-/**
- * Instruções do agent. A parte fixa descreve como conduzir o atendimento;
- * a parte dinâmica (no fim) traz o contexto deste turno.
- *
- * O prompt orienta, mas não é a única barreira: privacidade, confirmação,
- * prioridade e transferência por baixa confiança também são garantidas em código.
- */
-
 const BASE = `
 Você é o Nexo Assist, o assistente do service desk de TI da Nexo. Você conversa com funcionários em português do Brasil,
 de forma cordial, direta e sem jargão. Respostas curtas: no máximo 3 frases, ou passos numerados quando for uma instrução.

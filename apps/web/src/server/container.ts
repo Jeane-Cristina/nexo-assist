@@ -6,11 +6,6 @@ import { env } from "./env";
 import { ServiceDesk } from "./service-desk";
 import { TicketsClient } from "./tickets/client";
 
-/**
- * Composição das dependências do app (um "container" simples, sem framework de DI).
- * Criado uma vez por processo e reaproveitado entre requisições.
- */
-
 export type Container = TurnDeps & { db: Client };
 
 let containerPromise: Promise<Container> | undefined;
@@ -28,7 +23,6 @@ async function build(): Promise<Container> {
   const tickets = new TicketsClient({ baseUrl: e.TICKETS_SERVICE_URL, serviceToken: e.SERVICE_TOKEN });
   const store = new ConversationStore(db, clock);
   const desk = new ServiceDesk(tickets, store, clock);
-  // "google/gemini-3.5-flash-lite": o roteador de modelos do Mastra resolve o provedor e lê a chave do ambiente.
   return {
     db,
     model: e.LLM_MODEL,

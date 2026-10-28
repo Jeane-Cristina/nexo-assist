@@ -8,13 +8,6 @@ import { formatAgo, formatDay, formatDayTime, formatUntil } from "@/server/forma
 import { CATEGORIES, IMPACT_LABEL, PRIORITY_LABEL, type Impact } from "@/server/tickets/schemas";
 import { Dot, Field, PRIORITY_DOT, STATUS_DOT } from "../ui";
 
-/**
- * Cartões que aparecem dentro do chat. Seguem o protótipo:
- * - lista de chamados para escolher (tela 3);
- * - chamado com prazo (tela 3);
- * - rascunho com Confirmar / Editar / Cancelar (tela 2).
- */
-
 const CardShell = ({ children, muted = false }: { children: React.ReactNode; muted?: boolean }) => (
   <div className={`w-full max-w-[808px] overflow-hidden rounded-2xl border border-line bg-white ${muted ? "opacity-70" : ""}`}>{children}</div>
 );
@@ -28,8 +21,6 @@ const Eyebrow = ({ kind, id, state }: { kind: string; id: string; state: React.R
     {state}
   </div>
 );
-
-// ---------------------------------------------------------------------------
 
 export function TicketListCard({
   tickets,
@@ -65,8 +56,6 @@ export function TicketListCard({
     </CardShell>
   );
 }
-
-// ---------------------------------------------------------------------------
 
 export function TicketCard({ ticket: t }: { ticket: TicketSummary }) {
   const now = new Date();
@@ -109,11 +98,8 @@ export function TicketCard({ ticket: t }: { ticket: TicketSummary }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-
 type PendingProps = {
   action: PendingAction;
-  /** O rascunho deste cartão ainda é o pendente da conversa? */
   active: boolean;
   busy: boolean;
   onConfirm: () => void;
@@ -130,7 +116,6 @@ const BLOCKING_LABEL: Record<(typeof BLOCKING_LEVELS)[number], string> = {
 export function PendingCard({ action, active, busy, onConfirm, onCancel, onEdit }: PendingProps) {
   const [editing, setEditing] = useState(false);
 
-  // ⌘/Ctrl + Enter confirma, como no protótipo.
   useEffect(() => {
     if (!active || editing) return;
     const onKey = (e: KeyboardEvent) => {
@@ -214,7 +199,6 @@ export function PendingCard({ action, active, busy, onConfirm, onCancel, onEdit 
 }
 
 function Actions({ busy, onConfirm, onCancel, onEdit }: { busy: boolean; onConfirm: () => void; onCancel: () => void; onEdit?: () => void }) {
-  // Detectado depois de montar, para o HTML do servidor e o do navegador baterem.
   const [mac, setMac] = useState(false);
   useEffect(() => setMac(isMac()), []);
   return (
@@ -336,5 +320,4 @@ function DraftEditor({
   );
 }
 
-/** O atalho aparece como ⌘ no Mac e Ctrl no Windows/Linux. */
 const isMac = (): boolean => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent);

@@ -6,7 +6,6 @@ import { touchPresence } from "@/server/stats";
 
 export const dynamic = "force-dynamic";
 
-/** Console do analista (telas 4 e 5). Abre direto na fila "Para você". */
 export default async function ConsolePage() {
   const session = await requireSession("analyst");
   const container = await getContainer();

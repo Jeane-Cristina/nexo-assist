@@ -2,7 +2,6 @@ import type { Conversation, Message } from "@/server/conversations/types";
 import { TRANSFER_REASON_LABEL } from "@/server/conversations/types";
 import { formatAgo } from "@/server/format";
 
-/** Cores de avatar do protótipo, escolhidas de forma estável pelo nome. */
 const AVATARS = [
   ["#DCE9F7", "#0062C4"],
   ["#F6E3D3", "#9A4A12"],
@@ -22,7 +21,6 @@ export function avatarColors(name: string): { bg: string; fg: string } {
 
 export type Tag = { label: string; tone: "danger" | "warning" | "success" | "info" | "muted" };
 
-/** Etiqueta da conversa na lista: por que ela precisa (ou não) de alguém. */
 export function conversationTag(c: Conversation, me: string): Tag {
   switch (c.status) {
     case "aguardando_atendente": {
@@ -57,6 +55,5 @@ export function previewOf(m: Pick<Message, "role" | "content"> | null, authorFir
 
 export function waitingFor(c: Conversation, now: Date): string | null {
   if (c.status !== "aguardando_atendente" || !c.transfer) return null;
-  // "há 7 min" — quanto tempo a pessoa espera um analista.
   return formatAgo(c.transfer.at, now).replace("agora há pouco", "agora");
 }

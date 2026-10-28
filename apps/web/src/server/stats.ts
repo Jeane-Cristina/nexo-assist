@@ -1,14 +1,7 @@
 import type { Client } from "@libsql/client";
 
-/**
- * As três métricas da tela de login do protótipo, calculadas dos dados reais
- * (e não números decorativos). Sem dados ainda, voltam null e a tela mostra "—".
- */
-
 export type ServiceDeskStats = {
-  /** Tempo médio entre a mensagem do funcionário e a resposta do agent. */
   avgFirstResponseSeconds: number | null;
-  /** Conversas que terminaram sem passar pela fila de analistas. */
   resolvedWithoutQueuePct: number | null;
   analystsOnline: number;
 };
@@ -44,7 +37,6 @@ export async function getStats(db: Client, now: Date = new Date()): Promise<Serv
   };
 }
 
-/** Marca o analista como online (chamado a cada atualização do console). */
 export async function touchPresence(db: Client, email: string, now: Date = new Date()): Promise<void> {
   await db.execute({
     sql: "INSERT INTO analyst_presence (email, last_seen) VALUES (?, ?) ON CONFLICT(email) DO UPDATE SET last_seen = excluded.last_seen",

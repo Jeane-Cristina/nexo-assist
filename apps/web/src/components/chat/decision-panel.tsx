@@ -4,11 +4,6 @@ import { AlertTriangle, CheckCircle2, ShieldCheck, Wrench, XCircle } from "lucid
 import type { Decision, Step } from "@/server/conversations/types";
 import { INTENT_LABEL } from "@/server/conversations/types";
 
-/**
- * "Por que respondi assim": o detalhe da decisão do agent, pedido no PRD.
- * Tudo aqui veio do que foi EXECUTADO no turno (ferramentas, regras do código),
- * não de uma explicação escrita depois pelo modelo — exceto o "motivo", que é do modelo.
- */
 export function DecisionPanel({ decision, steps }: { decision: Decision; steps: Step[] }) {
   const pct = decision.confidence === null ? null : Math.round(decision.confidence * 100);
   const barColor = pct === null ? "bg-ink/20" : pct < 45 ? "bg-danger" : pct < 70 ? "bg-warning" : "bg-success";

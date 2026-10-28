@@ -3,7 +3,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { MastraModelConfig } from "@mastra/core/llm";
 import { MockLanguageModelV3 } from "ai/test";
-// Integração de verdade: o agent conversa com o serviço de chamados real, em memória.
 import { createDb, migrate } from "../../tickets-service/src/db/client";
 import { Repository } from "../../tickets-service/src/db/repository";
 import { seed } from "../../tickets-service/src/db/seed";
@@ -18,7 +17,6 @@ import { TicketsClient } from "../src/server/tickets/client";
 import type { Employee } from "../src/server/tickets/schemas";
 
 export const TOKEN = "token-de-teste-com-16+chars";
-/** Quarta-feira, 28/10/2026, 10h em Brasília. */
 export const NOW = new Date("2026-10-28T13:00:00.000Z");
 
 export const ANA: Employee = {
@@ -29,11 +27,7 @@ export const ANA: Employee = {
   device: "Notebook Dell Latitude · Windows 11",
 };
 
-// ---------------------------------------------------------------------------
-// Modelo roteirizado: cada chamada ao modelo devolve o próximo passo do roteiro.
-
 export type ToolCallSpec = { tool: string; args: Record<string, unknown> };
-/** Um passo: chamadas de ferramenta, ou texto final. Pode depender do estado (ex.: id do rascunho). */
 export type ScriptStep = ToolCallSpec[] | string | (() => ToolCallSpec[] | string | Promise<ToolCallSpec[] | string>);
 
 const usage = {
@@ -63,8 +57,6 @@ export function scriptedModel(script: ScriptStep[] | (() => never)) {
       };
     },
   });
-  // O mock do pacote "ai" e o Mastra trazem cópias diferentes dos tipos do provider;
-  // em runtime o contrato é o mesmo (LanguageModelV3), daí o cast.
   return { model: model as unknown as MastraModelConfig, prompts, remaining: () => queue.length };
 }
 
@@ -72,9 +64,6 @@ export const decision = (intencao: string, confianca: number, extra: Record<stri
   tool: "registrar_decisao",
   args: { intencao, acao: "Ação de teste", confianca, motivo: "Motivo de teste", ...extra },
 });
-
-// ---------------------------------------------------------------------------
-// Ambiente completo: serviço de chamados + banco do app, em arquivos temporários.
 
 export type TestEnv = Awaited<ReturnType<typeof createTestEnv>>;
 
@@ -95,8 +84,6 @@ export async function createTestEnv(opts: { legacyDown?: boolean } = {}) {
 
   const appDb = createAppDb(`file:${join(dir, "app.db")}`);
   await migrateAppDb(appDb);
-  // Relógio que anda 1s a cada leitura: turnos distintos têm instantes distintos,
-  // como na vida real (importa para a regra "não confirmar no mesmo turno").
   let ticks = 0;
   const clock = () => new Date(NOW.getTime() + ticks++ * 1000);
   const store = new ConversationStore(appDb, clock);
@@ -122,7 +109,6 @@ export async function createTestEnv(opts: { legacyDown?: boolean } = {}) {
       try {
         rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
       } catch {
-        /* Windows pode segurar o arquivo; a pasta temporária é descartável */
       }
     },
   };

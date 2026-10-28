@@ -1,6 +1,5 @@
 import { ChevronRight } from "lucide-react";
 
-/** Barra superior das telas do funcionário: trilha + área à direita (status, ações). */
 export function TopBar({ here, children }: { here: string; children?: React.ReactNode }) {
   return (
     <header className="flex h-16 shrink-0 items-center gap-4 border-b border-line px-8">

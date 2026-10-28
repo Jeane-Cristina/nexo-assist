@@ -3,7 +3,6 @@ import { ARTICLES, EMPLOYEES, TICKETS } from "./seed-data";
 
 const DAY = 24 * 60 * 60_000;
 
-/** Popula o banco só se ele estiver vazio — seguro chamar a cada boot. */
 export async function seedIfEmpty(db: Client, now: Date = new Date()): Promise<boolean> {
   const { rows } = await db.execute("SELECT COUNT(*) AS n FROM employees");
   if (Number(rows[0]?.n ?? 0) > 0) return false;

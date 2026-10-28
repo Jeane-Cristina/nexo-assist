@@ -4,15 +4,6 @@ import { TicketsError, type Actor } from "../tickets/client";
 import type { Employee, Ticket } from "../tickets/schemas";
 import { ChatError, type ChatDeps } from "./employee-chat";
 
-/**
- * Casos de uso do console do analista (telas 4 e 5).
- *
- * Regras de quem pode o quê:
- * - qualquer analista vê todas as conversas e os chamados do funcionário;
- * - assumir pausa o agent; só quem assumiu escreve na conversa;
- * - conversa assumida por outro analista não pode ser assumida, devolvida nem encerrada.
- */
-
 export const CONSOLE_FILTERS = ["para_voce", "com_agent", "minhas", "todas"] as const;
 export type ConsoleFilter = (typeof CONSOLE_FILTERS)[number];
 
@@ -30,7 +21,6 @@ export type ConversationDetail = {
   conversation: Conversation;
   messages: Message[];
   employee: Employee | null;
-  /** null quando o legado está fora do ar: o console continua funcionando sem o painel. */
   tickets: Ticket[] | null;
 };
 
@@ -70,7 +60,6 @@ export async function listConversations(
         c.employeeEmail.includes(q) ||
         (c.focusTicket ?? "").toLowerCase().includes(q),
     )
-    // Quem espera atendente vem primeiro, do que espera há mais tempo para o mais recente.
     .sort((a, b) => {
       const waitA = a.status === "aguardando_atendente" ? 0 : 1;
       const waitB = b.status === "aguardando_atendente" ? 0 : 1;
@@ -118,7 +107,6 @@ function assertNotTakenByOther(conversation: Conversation, session: Session) {
   }
 }
 
-/** Assumir: o agent pausa e o analista passa a responder. Vale também para conversas ainda com o agent. */
 export async function takeOver(deps: ChatDeps, session: Session, id: string): Promise<Conversation> {
   const conversation = await load(deps, id);
   assertNotTakenByOther(conversation, session);
@@ -126,7 +114,6 @@ export async function takeOver(deps: ChatDeps, session: Session, id: string): Pr
   return deps.desk.takeOver(analystOf(session), conversation);
 }
 
-/** Devolver ao agent: o agent volta a responder a partir da próxima mensagem do funcionário. */
 export async function returnToAgent(deps: ChatDeps, session: Session, id: string): Promise<Conversation> {
   const conversation = await load(deps, id);
   assertNotTakenByOther(conversation, session);
@@ -140,7 +127,6 @@ export async function closeConversation(deps: ChatDeps, session: Session, id: st
   return deps.desk.close(analystOf(session), conversation);
 }
 
-/** Mensagem do analista para o funcionário. Só depois de assumir, e só quem assumiu. */
 export async function sendAnalystMessage(deps: ChatDeps, session: Session, id: string, text: string): Promise<Message> {
   const conversation = await load(deps, id);
   if (conversation.status !== "em_atendimento") throw new ChatError(409, "Assuma o atendimento para responder.");

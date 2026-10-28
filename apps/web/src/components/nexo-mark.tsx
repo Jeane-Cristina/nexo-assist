@@ -1,4 +1,3 @@
-/** Marca da Nexo, extraída do protótipo. */
 export function NexoMark({ size = 24, color = "currentColor" }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="-1.8 -3.7 28 28" aria-hidden="true">

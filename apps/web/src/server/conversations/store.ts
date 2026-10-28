@@ -10,8 +10,6 @@ import {
   type MessageRole,
 } from "./types";
 
-/** Persistência de conversas e mensagens. Única camada que conhece SQL no app web. */
-
 const json = <T>(v: unknown, parse: (x: unknown) => T): T | null => (v === null || v === undefined ? null : parse(JSON.parse(String(v))));
 
 const toConversation = (r: Row): Conversation =>
@@ -89,7 +87,6 @@ export class ConversationStore {
     return c;
   }
 
-  /** Conversa em aberto mais recente do funcionário — é o que permite "voltar outro dia e continuar". */
   async findActiveForEmployee(email: string): Promise<Conversation | null> {
     const { rows } = await this.db.execute({
       sql: "SELECT * FROM conversations WHERE employee_email = ? AND status != 'encerrada' ORDER BY updated_at DESC LIMIT 1",
@@ -127,7 +124,6 @@ export class ConversationStore {
     return this.require(id);
   }
 
-  /** Grava a mensagem; mensagem do funcionário também soma no limite da sessão. */
   async appendMessage(conversationId: string, msg: NewMessage): Promise<Message> {
     const id = randomUUID();
     const ts = this.clock().toISOString();
@@ -150,7 +146,6 @@ export class ConversationStore {
     return toMessage(rows[0]!);
   }
 
-  /** Mensagens em ordem cronológica; com `last`, só as N mais recentes. */
   async listMessages(conversationId: string, opts: { last?: number } = {}): Promise<Message[]> {
     const { rows } = opts.last
       ? await this.db.execute({

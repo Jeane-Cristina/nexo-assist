@@ -6,7 +6,6 @@ import { touchPresence } from "@/server/stats";
 
 export const dynamic = "force-dynamic";
 
-/** Lista de conversas do console, com filtro (?filter=para_voce) e busca (?q=). */
 export async function GET(req: Request) {
   const auth = await sessionOrError("analyst");
   if ("error" in auth) return auth.error;

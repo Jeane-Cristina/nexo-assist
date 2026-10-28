@@ -4,7 +4,6 @@ import { sendMessage } from "@/server/chat/employee-chat";
 import { getContainer } from "@/server/container";
 import { errorResponse } from "@/server/http/respond";
 
-// O turno do agent pode levar alguns segundos (várias chamadas ao modelo e ao legado).
 export const maxDuration = 60;
 
 const Body = z.object({

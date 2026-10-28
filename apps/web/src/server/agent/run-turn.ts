@@ -9,25 +9,12 @@ import { buildInstructions } from "./instructions";
 import { TurnRecorder } from "./recorder";
 import { createAgentTools } from "./tools";
 
-/**
- * Um turno do atendimento: recebe a mensagem do funcionário e devolve as
- * mensagens que devem aparecer no chat.
- *
- * Ordem das barreiras (todas em código, antes ou depois do modelo):
- * 1. conversa transferida → o agent não responde;
- * 2. limite de 30 mensagens por sessão;
- * 3. o modelo decide e usa as ferramentas (que já aplicam privacidade, confirmação e prioridade);
- * 4. confiança baixa → transferência automática para um analista.
- */
-
 export const LOW_CONFIDENCE = 0.45;
-/** Quantas mensagens anteriores vão como contexto para o modelo. */
 const HISTORY_WINDOW = 20;
 const MAX_STEPS = 8;
 
 export type TurnDeps = {
   model: MastraModelConfig;
-  /** Modelo reserva, usado quando o principal está sobrecarregado ou sem cota. */
   fallbackModel?: MastraModelConfig;
   store: ConversationStore;
   desk: ServiceDesk;
@@ -37,7 +24,6 @@ export type TurnDeps = {
 
 export type TurnResult =
   | { kind: "answered"; conversation: Conversation; messages: Message[] }
-  /** Conversa com analista: a mensagem foi registrada, o agent não responde. */
   | { kind: "paused"; conversation: Conversation; messages: Message[] }
   | { kind: "limit_reached"; conversation: Conversation; messages: Message[] };
 
@@ -80,8 +66,6 @@ export async function handleEmployeeMessage(
       name: "Nexo Assist",
       instructions,
       model,
-      // Uma nova tentativa no mesmo modelo; depois disso, melhor ir para o reserva
-      // do que deixar o funcionário esperando quase um minuto.
       maxRetries: 1,
       tools,
     });
@@ -92,7 +76,6 @@ export async function handleEmployeeMessage(
       break;
     } catch (err) {
       const hasNext = index < models.length - 1;
-      // Só troca de modelo se nenhuma ferramenta rodou: refazer o turno não pode repetir efeitos.
       if (hasNext && isProviderBusy(err) && recorder.steps.length === 0) {
         console.warn(`[agent] ${modelName(model)} indisponível (${errorMessage(err)}); tentando o reserva.`);
         continue;
@@ -105,7 +88,6 @@ export async function handleEmployeeMessage(
     recorder.guardrail("O agent não registrou a decisão neste turno; confiança marcada como não informada.");
   }
 
-  // Barreira 4: sem segurança → analista. Vale mesmo que o modelo tenha "esquecido" de transferir.
   const confidence = recorder.decision?.confidence ?? null;
   const intent = recorder.decision?.intent;
   if (
@@ -154,7 +136,6 @@ export async function handleEmployeeMessage(
   return { kind: "answered", conversation: finalConversation, messages };
 }
 
-/** Histórico em formato de chat. Analista e eventos de sistema entram como contexto marcado. */
 type ModelMessage = { role: "user"; content: string } | { role: "assistant"; content: string };
 
 export function toModelMessages(history: Message[]): ModelMessage[] {
@@ -176,7 +157,6 @@ const errorMessage = (err: unknown): string => (err instanceof Error ? err.messa
 
 const modelName = (model: MastraModelConfig): string => (typeof model === "string" ? model : "modelo configurado");
 
-/** Sobrecarga ou cota do provedor de IA: vale tentar outro modelo. */
 export function isProviderBusy(err: unknown): boolean {
   return /\b(429|503)\b|quota|rate.?limit|resource.?exhausted|high demand|overloaded|unavailable/i.test(errorMessage(err));
 }

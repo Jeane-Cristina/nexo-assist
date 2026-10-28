@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-/**
- * Vocabulário do service desk (Anexo A do PRD).
- * Tudo que entra e sai do serviço passa por estes schemas, então o tipo
- * TypeScript e a validação em runtime nunca divergem.
- */
-
 export const TICKET_TYPES = ["INC", "REQ"] as const;
 export const TicketType = z.enum(TICKET_TYPES);
 export type TicketType = z.infer<typeof TicketType>;
@@ -18,7 +12,6 @@ export const PRIORITIES = ["critica", "alta", "media", "baixa"] as const;
 export const Priority = z.enum(PRIORITIES);
 export type Priority = z.infer<typeof Priority>;
 
-/** Quantas pessoas o problema afeta — é metade da conta da prioridade. */
 export const IMPACTS = ["individual", "equipe", "empresa"] as const;
 export const Impact = z.enum(IMPACTS);
 export type Impact = z.infer<typeof Impact>;
@@ -56,7 +49,6 @@ export const Employee = z.object({
   name: z.string(),
   department: z.string(),
   role: ActorRole,
-  /** Equipamento principal — o agent usa para aplicar artigos que dependem do SO. */
   device: z.string().nullable(),
 });
 export type Employee = z.infer<typeof Employee>;
@@ -72,9 +64,7 @@ export const Ticket = z.object({
   requesterEmail: z.string().email(),
   status: TicketStatus,
   createdAt: z.string(),
-  /** Última atualização feita pelo suporte (é o que reinicia o prazo). */
   lastSupportUpdateAt: z.string(),
-  /** Última movimentação de qualquer tipo, inclusive complemento do funcionário. */
   updatedAt: z.string(),
   resolvedAt: z.string().nullable(),
   assignee: z.string().nullable(),

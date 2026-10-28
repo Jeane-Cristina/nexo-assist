@@ -2,7 +2,6 @@ import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { createClient, type Client } from "@libsql/client";
 
-/** Mesmo protocolo para SQLite local e Turso (deploy). */
 export function createAppDb(url: string, authToken?: string): Client {
   if (url.startsWith("file:")) mkdirSync(dirname(url.slice("file:".length)), { recursive: true });
   return createClient(authToken ? { url, authToken } : { url });
@@ -37,7 +36,6 @@ export async function migrateAppDb(db: Client): Promise<void> {
         created_at TEXT NOT NULL
       )`,
       `CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id, seq)`,
-      // Presença dos analistas (atualizada pelo console a cada poucos segundos).
       `CREATE TABLE IF NOT EXISTS analyst_presence (
         email TEXT PRIMARY KEY,
         last_seen TEXT NOT NULL

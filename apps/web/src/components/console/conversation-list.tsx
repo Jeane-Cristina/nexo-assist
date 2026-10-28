@@ -14,7 +14,6 @@ const FILTER_LABEL: Record<ConsoleFilter, string> = {
 };
 const FILTER_ORDER: ConsoleFilter[] = ["todas", "para_voce", "com_agent", "minhas"];
 
-/** Coluna da esquerda da tela 4: conversas com filtros, busca e etiqueta de situação. */
 export function ConversationList({
   list,
   filter,

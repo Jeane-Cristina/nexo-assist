@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-/**
- * Contrato do serviço de chamados, do ponto de vista de quem consome.
- * O app web valida tudo o que recebe do "legado": se o formato mudar,
- * o erro aparece aqui, com mensagem clara, e não dentro do agent.
- */
-
 export const CATEGORIES = ["Acesso", "Rede e VPN", "Hardware", "Software", "E-mail", "Outros"] as const;
 export const Category = z.enum(CATEGORIES);
 export type Category = z.infer<typeof Category>;

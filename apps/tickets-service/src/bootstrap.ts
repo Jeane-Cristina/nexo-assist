@@ -6,7 +6,6 @@ import { TicketService } from "./domain/tickets";
 import { createApp } from "./http/app";
 import { createInstability } from "./http/legacy-instability";
 
-/** Monta o app inteiro a partir da config. Usado pelo servidor Node e pelo deploy. */
 export async function bootstrap(config: Config) {
   const db = createDb(config.TICKETS_DB_URL, config.TICKETS_DB_AUTH_TOKEN);
   await migrate(db);

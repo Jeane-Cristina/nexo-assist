@@ -8,8 +8,6 @@ import { systemIcon } from "../timeline-icons";
 import { PendingCard, TicketCard, TicketListCard } from "./cards";
 import { DecisionPanel } from "./decision-panel";
 
-/** Uma mensagem do chat do funcionário, por papel: funcionário, agent, analista ou evento do sistema. */
-
 export type MessageHandlers = {
   send: (text: string) => void;
   confirm: (pendingId: string) => void;
@@ -27,9 +25,7 @@ export function ChatMessage({
 }: {
   message: Message;
   conversation: Conversation;
-  /** O que o funcionário respondeu logo depois (para destacar a opção escolhida). */
   answer?: string;
-  /** Só a última mensagem aceita cliques em opções e listas. */
   isLast: boolean;
   busy: boolean;
   handlers: MessageHandlers;
@@ -97,7 +93,6 @@ function AgentMessage({
 
   return (
     <div className="flex flex-col gap-1.5">
-      {/* Linha de status: o que o agent fez antes de responder. Clicar abre o detalhe. */}
       <button
         onClick={() => decision && setOpen((v) => !v)}
         className="group flex w-fit flex-wrap items-center gap-x-3 gap-y-1 text-left text-[12.5px]"
@@ -125,8 +120,6 @@ function AgentMessage({
         {body && <p className="text-[14.5px] leading-[22px] whitespace-pre-wrap">{body}</p>}
         {question && <p className="text-[14.5px] font-semibold">{question}</p>}
         {quickReplies.length > 0 && (
-          // Como no protótipo, as opções ficam na mensagem mesmo depois de respondidas,
-          // com a escolhida destacada. Só a última mensagem aceita clique.
           <div className="flex flex-wrap gap-1.5">
             {quickReplies.map((q) => {
               const chosen = answer !== undefined && sameText(answer, q);
@@ -166,7 +159,6 @@ function AgentMessage({
             return (
               <PendingCard
                 key={`${i}-${card.action.id}`}
-                // Mostra a versão atual do rascunho (pode ter sido editado depois desta mensagem).
                 action={conversation.pendingAction?.id === card.action.id ? conversation.pendingAction : card.action}
                 active={conversation.pendingAction?.id === card.action.id && conversation.status === "agent"}
                 busy={busy}
@@ -183,10 +175,6 @@ function AgentMessage({
 
 const sameText = (a: string, b: string): boolean => a.trim().toLowerCase().startsWith(b.trim().toLowerCase());
 
-/**
- * Separa a pergunta final da resposta, para mostrá-la em destaque como no protótipo
- * ("Quem está sendo afetado?"). Só separa quando há texto antes da pergunta.
- */
 export function splitQuestion(content: string): { body: string; question: string | null } {
   const text = content.trim();
   if (!text.endsWith("?")) return { body: text, question: null };

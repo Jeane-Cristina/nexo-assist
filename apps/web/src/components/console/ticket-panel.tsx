@@ -10,10 +10,6 @@ import { formatTime } from "@/server/format";
 import { Dot, STATUS_DOT } from "../ui";
 import { systemIcon } from "../timeline-icons";
 
-/**
- * Coluna da direita: o que o analista precisa saber antes de responder —
- * o resumo que o agent deixou na transferência e os chamados da pessoa.
- */
 export function TicketPanel({ detail }: { detail: ConversationDetail }) {
   const { conversation: c, tickets } = detail;
   const first = c.employeeName.split(" ")[0];
@@ -22,7 +18,6 @@ export function TicketPanel({ detail }: { detail: ConversationDetail }) {
   const closed = tickets?.filter((t) => !t.isOpen) ?? [];
   const current = tickets?.find((t) => t.number === c.focusTicket) ?? null;
   const others = (tickets ?? []).filter((t) => t.number !== c.focusTicket);
-  // Último marco da conversa (transferida, assumida...) — o "Last Event" do protótipo.
   const lastEvent = [...detail.messages].reverse().find((m) => m.role === "system") ?? null;
 
   return (

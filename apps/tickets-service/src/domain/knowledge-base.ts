@@ -1,13 +1,5 @@
 import type { Article } from "./types";
 
-/**
- * Busca por palavras-chave na central de ajuda.
- *
- * Com 9 artigos, uma busca lexical simples é previsível e explicável (dá para
- * mostrar ao funcionário por que o artigo apareceu). Com uma base maior, o
- * caminho seria busca semântica com embeddings — está no "com mais tempo" do README.
- */
-
 const STOPWORDS = new Set([
   "a", "o", "as", "os", "de", "da", "do", "das", "dos", "e", "em", "no", "na", "nos", "nas", "um", "uma",
   "para", "por", "com", "que", "meu", "minha", "nao", "esta", "estou", "ta", "tá", "se", "ao", "como", "qual",
@@ -41,7 +33,6 @@ export function searchArticles(articles: Article[], query: string, limit = 3): A
       const matched: string[] = [];
       let score = 0;
       for (const term of queryTerms) {
-        // Título e tags pesam mais que o corpo: são escritos para serem achados.
         const weight = (titleTerms.has(term) ? 3 : 0) + (tagTerms.has(term) ? 3 : 0) + (bodyTerms.has(term) ? 1 : 0);
         if (weight > 0) {
           score += weight;

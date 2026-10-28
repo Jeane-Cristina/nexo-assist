@@ -23,7 +23,6 @@ const Body = z.object({
     .optional(),
 });
 
-/** Botões do cartão de rascunho: Confirmar, Cancelar, Editar. */
 export async function POST(req: Request) {
   const auth = await sessionOrError("employee");
   if ("error" in auth) return auth.error;
