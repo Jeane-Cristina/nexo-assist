@@ -9,7 +9,19 @@ Agent de atendimento do service desk de TI da Nexo: o funcionário descreve o pr
 ```
 apps/
   tickets-service/   serviço de chamados simulado (o "sistema legado")
+  web/               agent (Mastra), chat do funcionário e console do analista
 ```
+
+## Conversando com o agent pelo terminal
+
+Com o serviço de chamados rodando (abaixo):
+
+```bash
+cp apps/web/.env.example apps/web/.env.local   # coloque a chave do Gemini e o mesmo SERVICE_TOKEN
+pnpm --filter web chat
+```
+
+Avaliação dos cenários do PRD contra o modelo real: `pnpm --filter web eval`.
 
 ## Rodando o serviço de chamados
 
