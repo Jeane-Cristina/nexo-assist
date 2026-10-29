@@ -1,6 +1,7 @@
 import type { Client } from "@libsql/client";
 import type { TurnDeps } from "./agent/run-turn";
 import { ConversationStore } from "./conversations/store";
+import { createDemoModel, DEMO_MODEL_ID } from "./agent/demo-model";
 import { createAppDb, migrateAppDb } from "./db";
 import { env } from "./env";
 import { ServiceDesk } from "./service-desk";
@@ -25,7 +26,7 @@ async function build(): Promise<Container> {
   const desk = new ServiceDesk(tickets, store, clock);
   return {
     db,
-    model: e.LLM_MODEL,
+    model: e.LLM_MODEL === DEMO_MODEL_ID ? createDemoModel() : e.LLM_MODEL,
     ...(e.LLM_FALLBACK_MODEL ? { fallbackModel: e.LLM_FALLBACK_MODEL } : {}),
     store,
     desk,
