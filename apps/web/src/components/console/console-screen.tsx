@@ -41,7 +41,11 @@ export function ConsoleScreen({ me, initialList }: { me: { email: string; name: 
   const refreshDetail = useCallback(async () => {
     if (!selectedId) return setDetail(null);
     const d = await api<ConversationDetail>(`/api/console/conversations/${selectedId}`);
-    setDetail((prev) => (prev?.conversation.id === selectedId || !prev ? d : prev));
+    setDetail((prev) => {
+      if (prev && prev.conversation.id !== selectedId) return prev;
+      if (prev?.conversation.id !== d.conversation.id) return d;
+      return { ...d, employee: d.employee ?? prev.employee, tickets: d.tickets ?? prev.tickets };
+    });
   }, [selectedId]);
 
   useEffect(() => {
