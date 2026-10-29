@@ -40,7 +40,7 @@ pnpm dev
 
 Se preferir ver os logs separados, use um terminal para `pnpm --filter tickets-service dev` e outro para `pnpm --filter web dev`.
 
-**Sem chave do Gemini?** Coloque `LLM_MODEL=demo/roteiro` no `apps/web/.env.local`. O agent passa a usar respostas roteirizadas para duas mensagens ("O Excel fecha sozinho" e "Quero falar com um analista"). Dá para ver as telas, o rascunho, a confirmação e o console funcionando, mas não é a IA decidindo.
+**Sem chave do Gemini?** Coloque `LLM_MODEL=demo/roteiro` no `apps/web/.env.local`. O agent passa a usar respostas roteirizadas para um roteiro curto: "O Excel fecha sozinho", depois "Só eu", depois "Quero falar com um analista". Dá para ver as telas, o rascunho, a confirmação e o console funcionando, mas não é a IA decidindo.
 
 Abra **http://localhost:3000**. A senha de demonstração é a mesma para todos (`DEMO_PASSWORD`, padrão `nexo123`):
 
@@ -57,7 +57,7 @@ Abra **http://localhost:3000**. A senha de demonstração é a mesma para todos 
 |---|---|
 | `pnpm test` | Testes unitários e de integração (não precisa de chave nem de servidor rodando) |
 | `pnpm test:coverage` | Os mesmos testes, com relatório de cobertura |
-| `pnpm e2e` | Testes ponta a ponta no navegador (sobe os dois serviços sozinho, no modo de demonstração) |
+| `pnpm e2e` | Testes ponta a ponta no navegador (sobe os dois serviços sozinho, no modo de demonstração). Feche o `pnpm dev` antes: o Next não roda dois servidores de desenvolvimento da mesma pasta |
 | `pnpm typecheck` | TypeScript estrito nos dois projetos |
 | `pnpm seed` | Recria os dados de exemplo (as datas são relativas a "agora") |
 | `pnpm --filter web chat` | Conversa com o agent pelo terminal, sem as telas |
@@ -229,6 +229,7 @@ O modelo entende a conversa e escolhe a ferramenta. Tudo o que não pode dar err
 |---|---|
 | Expor chamado de outra pessoa | As ferramentas são criadas por turno com o funcionário da sessão; nenhuma recebe e-mail como parâmetro. O serviço responde 404, e não 403, para nem confirmar que o número existe |
 | Criar chamado sem a pessoa ver | O rascunho fica salvo na conversa; a confirmação precisa citar o mesmo id e acontecer num turno posterior |
+| Rascunho sem saber o impacto | Se ninguém disse quem é afetado e o agent ainda não perguntou, a ferramenta recusa o rascunho e manda perguntar primeiro |
 | Prioridade "no chute" | O modelo informa os fatos (quem é afetado, se está parado, se há compromisso hoje) e `triage.ts` aplica a tabela do Anexo A |
 | Duplicar chamado | A ferramenta procura chamados parecidos antes de montar o rascunho; o legado aceita chave de idempotência, então um retry nunca cria dois |
 | Agent inseguro respondendo mesmo assim | Confiança abaixo de 45% transfere automaticamente, mesmo que o modelo não peça |
@@ -269,7 +270,7 @@ Três camadas, todas rodando no [CI](.github/workflows/ci.yml) a cada push:
 | Camada | Quantidade | Cobertura |
 |---|---|---|
 | Serviço de chamados (`pnpm test`) | 38 testes | 92% das linhas |
-| Back do app: agent, regras, chat e console (`pnpm test`) | 62 testes | 89% das linhas |
+| Back do app: agent, regras, chat e console (`pnpm test`) | 63 testes | 89% das linhas |
 | Telas, ponta a ponta no navegador (`pnpm e2e`) | 2 fluxos com Playwright | — |
 
 Nenhum deles precisa de chave nem de rede.
@@ -282,7 +283,7 @@ Nenhum deles precisa de chave nem de rede.
   - modelo reserva entra só se nenhuma ferramenta rodou.
 - **Rotas e telas:** a Carla não usa a conversa da Ana nem sabendo o id; só quem assumiu responde; o rascunho continua salvo se o legado cair na confirmação.
 - **Sessão:** cookie adulterado (trocar e-mail, virar analista) é rejeitado.
-- **Ponta a ponta:** a Ana abre um chamado, confere o painel *por que respondi assim*, confirma e pede um analista; o Rafael assume e responde no console; a resposta aparece para a Ana; ele devolve e o agent volta. Também confere que funcionário não entra no console. Roda no modo de demonstração, para não depender do Gemini.
+- **Ponta a ponta:** a Ana descreve o problema, responde quem é afetado, confere o painel *por que respondi assim*, confirma e pede um analista; o Rafael assume e responde no console; a resposta aparece para a Ana; ele devolve e o agent volta. Também confere que funcionário não entra no console. Roda no modo de demonstração, para não depender do Gemini.
 
 **Avaliação com o modelo real** (`pnpm --filter web eval`): 8 cenários do PRD com 28 verificações. Os cenários são VPN no Windows 11, rascunho com prioridade alta, consulta com vários chamados, chamado vencido, privacidade com tentativa de injeção de instruções, assunto de RH, dúvida resolvida pela central e pedido de analista.
 
