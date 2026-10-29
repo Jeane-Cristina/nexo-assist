@@ -1,10 +1,14 @@
 # Nexo Assist
 
+[![CI](https://github.com/Jeane-Cristina/nexo-assist/actions/workflows/ci.yml/badge.svg)](https://github.com/Jeane-Cristina/nexo-assist/actions/workflows/ci.yml)
+
 Agent de atendimento do service desk de TI da Nexo. O funcionário descreve o problema num chat e o agent decide o que fazer: responder uma dúvida com a central de ajuda, consultar ou atualizar um chamado, abrir um chamado novo (sempre com confirmação) ou chamar um analista. O analista acompanha tudo num console, assume a conversa com o agent pausado e devolve quando terminar.
 
 Cada resposta do agent mostra o que ele fez e por quê: os passos executados, a intenção entendida, a confiança e as regras do service desk aplicadas.
 
-![Chat com rascunho de chamado](docs/screenshots/chat-rascunho.png)
+![Demonstração: a funcionária abre um chamado, pede um analista e recebe a resposta dele](docs/demo.gif)
+
+<sub>Gravado no modo de demonstração (`LLM_MODEL=demo/roteiro`), que troca o Gemini por respostas roteirizadas. Com o modelo real, o fluxo e as telas são os mesmos.</sub>
 
 ## Sumário
 
@@ -29,12 +33,14 @@ cp apps/tickets-service/.env.example apps/tickets-service/.env
 cp apps/web/.env.example apps/web/.env.local
 #    Em apps/web/.env.local, preencha GOOGLE_GENERATIVE_AI_API_KEY e SESSION_SECRET (32+ caracteres).
 
-# 2. Terminal 1: serviço de chamados (porta 4000). Cria e popula o banco no primeiro boot.
-pnpm --filter tickets-service dev
-
-# 3. Terminal 2: o app (porta 3000)
-pnpm --filter web dev
+# 2. Sobe o serviço de chamados (porta 4000) e o app (porta 3000) juntos.
+#    No primeiro boot, o serviço de chamados cria e popula o banco.
+pnpm dev
 ```
+
+Se preferir ver os logs separados, use um terminal para `pnpm --filter tickets-service dev` e outro para `pnpm --filter web dev`.
+
+**Sem chave do Gemini?** Coloque `LLM_MODEL=demo/roteiro` no `apps/web/.env.local`. O agent passa a usar respostas roteirizadas para duas mensagens ("O Excel fecha sozinho" e "Quero falar com um analista"). Dá para ver as telas, o rascunho, a confirmação e o console funcionando, mas não é a IA decidindo.
 
 Abra **http://localhost:3000**. A senha de demonstração é a mesma para todos (`DEMO_PASSWORD`, padrão `nexo123`):
 
@@ -49,7 +55,9 @@ Abra **http://localhost:3000**. A senha de demonstração é a mesma para todos 
 
 | Comando | O que faz |
 |---|---|
-| `pnpm test` | Todos os testes (não precisa de chave nem de servidor rodando) |
+| `pnpm test` | Testes unitários e de integração (não precisa de chave nem de servidor rodando) |
+| `pnpm test:coverage` | Os mesmos testes, com relatório de cobertura |
+| `pnpm e2e` | Testes ponta a ponta no navegador (sobe os dois serviços sozinho, no modo de demonstração) |
 | `pnpm typecheck` | TypeScript estrito nos dois projetos |
 | `pnpm seed` | Recria os dados de exemplo (as datas são relativas a "agora") |
 | `pnpm --filter web chat` | Conversa com o agent pelo terminal, sem as telas |
@@ -61,7 +69,7 @@ Abra **http://localhost:3000**. A senha de demonstração é a mesma para todos 
 
 | Variável | Para quê |
 |---|---|
-| `LLM_MODEL` | Modelo no formato `provedor/modelo` (padrão `google/gemini-3.5-flash-lite`) |
+| `LLM_MODEL` | Modelo no formato `provedor/modelo` (padrão `google/gemini-3.5-flash-lite`). `demo/roteiro` liga o modo de demonstração |
 | `LLM_FALLBACK_MODEL` | Modelo reserva, usado quando o principal está sobrecarregado ou sem cota |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Chave do Gemini. Para outro provedor, troque a chave e o `LLM_MODEL` |
 | `TICKETS_SERVICE_URL` / `SERVICE_TOKEN` | Endereço do serviço de chamados e o token compartilhado com ele |
@@ -256,7 +264,15 @@ O analista vê o mesmo painel em cada resposta do agent no console, e a confian�
 
 ## Testes e avaliação do agent
 
-**98 testes automatizados** (`pnpm test`): 38 no serviço de chamados e 60 no app. Não precisam de chave nem de rede.
+Três camadas, todas rodando no [CI](.github/workflows/ci.yml) a cada push:
+
+| Camada | Quantidade | Cobertura |
+|---|---|---|
+| Serviço de chamados (`pnpm test`) | 38 testes | 92% das linhas |
+| Back do app: agent, regras, chat e console (`pnpm test`) | 62 testes | 89% das linhas |
+| Telas, ponta a ponta no navegador (`pnpm e2e`) | 2 fluxos com Playwright | — |
+
+Nenhum deles precisa de chave nem de rede.
 
 - **Regras do legado:** prazo em horário útil (virada de dia, fim de semana, fora do expediente), reabertura em até 7 dias, privacidade, idempotência e instabilidade.
 - **Orquestração do agent** com um modelo roteirizado no lugar do LLM, contra o serviço de chamados real em memória. Testa o que existe em volta do modelo: ferramentas, barreiras, persistência e transparência. Exemplos:
@@ -266,6 +282,7 @@ O analista vê o mesmo painel em cada resposta do agent no console, e a confian�
   - modelo reserva entra só se nenhuma ferramenta rodou.
 - **Rotas e telas:** a Carla não usa a conversa da Ana nem sabendo o id; só quem assumiu responde; o rascunho continua salvo se o legado cair na confirmação.
 - **Sessão:** cookie adulterado (trocar e-mail, virar analista) é rejeitado.
+- **Ponta a ponta:** a Ana abre um chamado, confere o painel *por que respondi assim*, confirma e pede um analista; o Rafael assume e responde no console; a resposta aparece para a Ana; ele devolve e o agent volta. Também confere que funcionário não entra no console. Roda no modo de demonstração, para não depender do Gemini.
 
 **Avaliação com o modelo real** (`pnpm --filter web eval`): 8 cenários do PRD com 28 verificações. Os cenários são VPN no Windows 11, rascunho com prioridade alta, consulta com vários chamados, chamado vencido, privacidade com tentativa de injeção de instruções, assunto de RH, dúvida resolvida pela central e pedido de analista.
 
