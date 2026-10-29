@@ -9,7 +9,8 @@
     "start": "tsx --env-file-if-exists=.env src/index.ts",
     "seed": "tsx --env-file-if-exists=.env src/db/reset.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.0",

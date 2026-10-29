@@ -21,3 +21,8 @@ data/
 *.log
 *.tsbuildinfo
 next-env.d.ts
+.e2e/
+test-results/
+playwright-report/
+coverage/
+apps/web/AGENTS.md

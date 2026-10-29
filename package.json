@@ -6,12 +6,19 @@
     "node": ">=20"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   },
   "scripts": {
     "dev": "pnpm -r --parallel dev",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "seed": "pnpm --filter tickets-service seed"
+    "seed": "pnpm --filter tickets-service seed",
+    "test:coverage": "pnpm -r test:coverage",
+    "e2e": "pnpm --filter web e2e"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "3.2.7"
   }
 }
