@@ -1,5 +1,5 @@
 import type { Client, InStatement } from "@libsql/client";
-import { ARTICLES, EMPLOYEES, TICKETS } from "./seed-data";
+import { ARTICLES, EMPLOYEES, TICKETS } from "./seed-data.js";
 
 const DAY = 24 * 60 * 60_000;
 

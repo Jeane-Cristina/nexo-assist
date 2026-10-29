@@ -1,10 +1,10 @@
 import { timingSafeEqual } from "node:crypto";
 import { Hono, type Context } from "hono";
 import { z, ZodError } from "zod";
-import { DomainError } from "../domain/errors";
-import type { Actor, TicketService } from "../domain/tickets";
-import { ActorRole, Category, Impact, Priority, TicketStatus, TicketType } from "../domain/types";
-import type { Instability } from "./legacy-instability";
+import { DomainError } from "../domain/errors.js";
+import type { Actor, TicketService } from "../domain/tickets.js";
+import { ActorRole, Category, Impact, Priority, TicketStatus, TicketType } from "../domain/types.js";
+import type { Instability } from "./legacy-instability.js";
 
 type Env = { Variables: { actor: Actor } };
 

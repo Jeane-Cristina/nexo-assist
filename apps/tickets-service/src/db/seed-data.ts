@@ -1,4 +1,4 @@
-import type { Article, Category, Employee, Impact, Priority, TicketEventKind, TicketStatus, TicketType } from "../domain/types";
+import type { Article, Category, Employee, Impact, Priority, TicketEventKind, TicketStatus, TicketType } from "../domain/types.js";
 
 export const EMPLOYEES: Employee[] = [
   { email: "ana.souza@nexo.com.br", name: "Ana Souza", department: "Financeiro", role: "employee", device: "Notebook Dell Latitude · Windows 11" },

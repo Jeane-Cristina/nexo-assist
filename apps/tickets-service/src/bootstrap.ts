@@ -1,10 +1,10 @@
-import type { Config } from "./config";
-import { createDb, migrate } from "./db/client";
-import { Repository } from "./db/repository";
-import { seedIfEmpty } from "./db/seed";
-import { TicketService } from "./domain/tickets";
-import { createApp } from "./http/app";
-import { createInstability } from "./http/legacy-instability";
+import type { Config } from "./config.js";
+import { createDb, migrate } from "./db/client.js";
+import { Repository } from "./db/repository.js";
+import { seedIfEmpty } from "./db/seed.js";
+import { TicketService } from "./domain/tickets.js";
+import { createApp } from "./http/app.js";
+import { createInstability } from "./http/legacy-instability.js";
 
 export async function bootstrap(config: Config) {
   const db = createDb(config.TICKETS_DB_URL, config.TICKETS_DB_AUTH_TOKEN);

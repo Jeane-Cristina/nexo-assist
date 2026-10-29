@@ -10,7 +10,7 @@ import {
   type TicketEventKind,
   type TicketStatus,
   type TicketType,
-} from "../domain/types";
+} from "../domain/types.js";
 
 const str = (v: unknown): string | null => (v === null || v === undefined ? null : String(v));
 

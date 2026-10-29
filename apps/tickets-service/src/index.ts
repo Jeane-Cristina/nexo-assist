@@ -1,6 +1,6 @@
 import { serve } from "@hono/node-server";
-import { bootstrap } from "./bootstrap";
-import { loadConfig } from "./config";
+import { bootstrap } from "./bootstrap.js";
+import { loadConfig } from "./config.js";
 
 const config = loadConfig();
 const { app, seeded } = await bootstrap(config);

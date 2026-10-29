@@ -1,10 +1,10 @@
-import type { NewTicket, Repository } from "../db/repository";
-import { DomainError } from "./errors";
-import { searchArticles, type ArticleMatch } from "./knowledge-base";
-import { canReopen, isOpen, toTicketView, type TicketView } from "./rules";
-import { slaFor } from "./sla";
-import type { ActorRole, Category, Employee, Impact, Priority, TicketEvent, TicketStatus } from "./types";
-import { CLOSED_STATUSES } from "./types";
+import type { NewTicket, Repository } from "../db/repository.js";
+import { DomainError } from "./errors.js";
+import { searchArticles, type ArticleMatch } from "./knowledge-base.js";
+import { canReopen, isOpen, toTicketView, type TicketView } from "./rules.js";
+import { slaFor } from "./sla.js";
+import type { ActorRole, Category, Employee, Impact, Priority, TicketEvent, TicketStatus } from "./types.js";
+import { CLOSED_STATUSES } from "./types.js";
 
 export type Actor = { email: string; role: ActorRole };
 

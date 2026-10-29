@@ -1,4 +1,4 @@
-import type { Priority } from "./types";
+import type { Priority } from "./types.js";
 
 export const BUSINESS_START_HOUR = 8;
 export const BUSINESS_END_HOUR = 18;

@@ -1,4 +1,4 @@
-import type { Article } from "./types";
+import type { Article } from "./types.js";
 
 const STOPWORDS = new Set([
   "a", "o", "as", "os", "de", "da", "do", "das", "dos", "e", "em", "no", "na", "nos", "nas", "um", "uma",

@@ -1,6 +1,6 @@
-import { loadConfig } from "../config";
-import { createDb, migrate } from "./client";
-import { seed, wipe } from "./seed";
+import { loadConfig } from "../config.js";
+import { createDb, migrate } from "./client.js";
+import { seed, wipe } from "./seed.js";
 
 const config = loadConfig();
 const db = createDb(config.TICKETS_DB_URL, config.TICKETS_DB_AUTH_TOKEN);

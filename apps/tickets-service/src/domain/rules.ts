@@ -1,5 +1,5 @@
-import { slaFor, type SlaView } from "./sla";
-import { CLOSED_STATUSES, type Ticket } from "./types";
+import { slaFor, type SlaView } from "./sla.js";
+import { CLOSED_STATUSES, type Ticket } from "./types.js";
 
 export const REOPEN_WINDOW_DAYS = 7;
 const DAY = 24 * 60 * 60_000;

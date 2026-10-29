@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { canReopen, isOpen } from "../src/domain/rules";
-import { addBusinessMinutes, computeDueAt, slaFor } from "../src/domain/sla";
+import { canReopen, isOpen } from "../src/domain/rules.js";
+import { addBusinessMinutes, computeDueAt, slaFor } from "../src/domain/sla.js";
 
 const br = (isoLocal: string): Date => new Date(`${isoLocal}-03:00`);
 const iso = (isoLocal: string): string => br(isoLocal).toISOString();

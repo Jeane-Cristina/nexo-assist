@@ -1,5 +1,5 @@
-import { bootstrap } from "../src/bootstrap";
-import { loadConfig } from "../src/config";
+import { bootstrap } from "../src/bootstrap.js";
+import { loadConfig } from "../src/config.js";
 
 type App = Awaited<ReturnType<typeof bootstrap>>["app"];
 

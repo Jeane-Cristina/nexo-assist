@@ -3,12 +3,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Client } from "@libsql/client";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createDb, migrate } from "../src/db/client";
-import { Repository } from "../src/db/repository";
-import { seed } from "../src/db/seed";
-import { TicketService } from "../src/domain/tickets";
-import { createApp } from "../src/http/app";
-import { createInstability } from "../src/http/legacy-instability";
+import { createDb, migrate } from "../src/db/client.js";
+import { Repository } from "../src/db/repository.js";
+import { seed } from "../src/db/seed.js";
+import { TicketService } from "../src/domain/tickets.js";
+import { createApp } from "../src/http/app.js";
+import { createInstability } from "../src/http/legacy-instability.js";
 
 const TOKEN = "token-de-teste-com-16+chars";
 const ANA = "ana.souza@nexo.com.br";
