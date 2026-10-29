@@ -6,6 +6,8 @@ Agent de atendimento do service desk de TI da Nexo. O funcionário descreve o pr
 
 Cada resposta do agent mostra o que ele fez e por quê: os passos executados, a intenção entendida, a confiança e as regras do service desk aplicadas.
 
+**Experimente online: [nexo-assist-nine.vercel.app](https://nexo-assist-nine.vercel.app)**. Entre como `ana.souza@nexo.com.br` (funcionária) ou `rafael.lima@nexo.com.br` (analista), com a senha `nexo123`. Use uma janela anônima para ter os dois ao mesmo tempo. O [roteiro para testar](#roteiro-para-testar) sugere o que perguntar.
+
 ![Demonstração: a funcionária abre um chamado, pede um analista e recebe a resposta dele](docs/demo.gif)
 
 <sub>Gravado no modo de demonstração (`LLM_MODEL=demo/roteiro`), que troca o Gemini por respostas roteirizadas. Com o modelo real, o fluxo e as telas são os mesmos.</sub>
@@ -19,6 +21,7 @@ Cada resposta do agent mostra o que ele fez e por quê: os passos executados, a 
 - [Como o agent decide](#como-o-agent-decide)
 - [Decisões e trade-offs](#decisões-e-trade-offs)
 - [Testes e avaliação do agent](#testes-e-avaliação-do-agent)
+- [Deploy](#deploy)
 - [Limitações e o que eu faria com mais tempo](#limitações-e-o-que-eu-faria-com-mais-tempo)
 
 ## Como rodar
@@ -294,6 +297,20 @@ A primeira rodada passou em todas as verificações da época. Ao ler as respost
 
 Corrigi o prompt e transformei cada problema numa verificação nova. Uma resposta de erro do modelo (cota excedida, por exemplo) conta como falha do cenário, para não "passar" por acidente.
 
+## Deploy
+
+São dois projetos na Vercel, apontando para o mesmo repositório, e dois bancos no Turso:
+
+| Projeto | Pasta | Endereço | Banco |
+|---|---|---|---|
+| App (Next.js) | `apps/web` | [nexo-assist-nine.vercel.app](https://nexo-assist-nine.vercel.app) | Turso `nexo-app` |
+| Serviço de chamados (Hono) | `apps/tickets-service` | [nexo-assist-tickets-service.vercel.app/health](https://nexo-assist-tickets-service.vercel.app/health) | Turso `nexo-tickets` |
+
+- O serviço de chamados roda como função serverless (`apps/tickets-service/api/index.ts`). O mesmo `createApp` do servidor local atende as requisições, então o comportamento é igual nos dois ambientes.
+- Na primeira requisição, ele cria as tabelas e popula os dados de exemplo. As datas são relativas a esse momento.
+- As variáveis são as mesmas do `.env.example` de cada app. Os segredos ficam só no painel da Vercel.
+- A instabilidade simulada continua ligada em produção (`LEGACY_FAILURE_RATE=0.1`). Por isso, de vez em quando o agent avisa que o sistema de chamados está fora, de propósito.
+
 ## Limitações e o que eu faria com mais tempo
 
 **Limitações conhecidas**
@@ -301,6 +318,8 @@ Corrigi o prompt e transformei cada problema numa verificação nova. Uma respos
 - Login de demonstração com senha única; não há redefinição de senha.
 - O modelo gratuito tem cota baixa. Com vários avaliadores ao mesmo tempo, pode aparecer "o serviço de IA está sobrecarregado".
 - A central de ajuda tem 9 artigos e busca por palavras.
+- No deploy, os dados de exemplo são criados uma vez. Com o passar dos dias, as datas relativas envelhecem: o INC-20150 deixa de ser reabrível depois de 7 dias. Para recriar, é só esvaziar o banco `nexo-tickets`.
+- Funções serverless "esfriam": a primeira mensagem depois de um tempo parado pode levar alguns segundos a mais.
 
 **Com mais tempo**
 - Streaming da resposta, com os passos aparecendo conforme as ferramentas rodam.
