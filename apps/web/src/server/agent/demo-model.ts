@@ -56,7 +56,18 @@ function plan(text: string, draftId: string | null): ToolCall[] {
       },
     ];
   }
-  if (/excel|planilha/.test(t)) {
+  const saidWhoIsAffected = /s[óo] eu|s[óo] comigo|equipe|empresa|n[ãa]o sei/.test(t);
+  if (/excel|planilha/.test(t) && !saidWhoIsAffected) {
+    return [
+      decision("esclarecer", "Perguntei quem é afetado", "A prioridade depende de quantas pessoas estão sem o Excel, então preciso saber isso antes do rascunho.", [
+        "Só eu",
+        "Minha equipe",
+        "Toda a empresa",
+        "Não sei",
+      ]),
+    ];
+  }
+  if (saidWhoIsAffected) {
     return [
       {
         tool: "preparar_rascunho_chamado",
@@ -77,6 +88,7 @@ function plan(text: string, draftId: string | null): ToolCall[] {
 }
 
 const FINAL_TEXT: Record<string, string> = {
+  registrar_decisao: "Entendi, o Excel está fechando sozinho. Quem está sendo afetado?",
   preparar_rascunho_chamado:
     "Preparei o rascunho abaixo. A prioridade ficou média porque só você é afetada e dá para seguir trabalhando. Confira e confirme para eu abrir o chamado.",
   confirmar_acao_pendente: "Pronto, abri o chamado. Você acompanha o andamento por aqui.",

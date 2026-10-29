@@ -55,7 +55,7 @@ export async function handleEmployeeMessage(
   const recorder = new TurnRecorder(conversation, startedAt);
   const history = await store.listMessages(conversation.id, { last: HISTORY_WINDOW });
 
-  const tools = createAgentTools({ actor, employee: input.employee, tickets: deps.tickets, desk: deps.desk, recorder, clock: deps.clock });
+  const tools = createAgentTools({ actor, employee: input.employee, tickets: deps.tickets, desk: deps.desk, recorder, clock: deps.clock, history });
   const instructions = buildInstructions({ employee: input.employee, conversation, now: startedAt });
   const models = [deps.model, ...(deps.fallbackModel ? [deps.fallbackModel] : [])];
 

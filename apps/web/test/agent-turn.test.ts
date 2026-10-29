@@ -57,6 +57,16 @@ describe("transparência", () => {
 });
 
 describe("abertura de chamado com rascunho e confirmação", () => {
+  it("barreira: não monta o rascunho sem saber quem é afetado", async () => {
+    const { agentMsg } = await turn("Meu notebook não conecta na VPN. Erro 809.", [
+      [{ tool: "preparar_rascunho_chamado", args: VPN_DRAFT }],
+      [decision("esclarecer", 0.9, { opcoesRapidas: ["Só eu", "Minha equipe", "Toda a empresa", "Não sei"] })],
+      "Quem está sendo afetado?",
+    ]);
+    expect(conversation.pendingAction).toBeNull();
+    expect(agentMsg.meta.decision?.guardrails.join(" ")).toContain("sem saber quem é afetado");
+  });
+
   it("monta o rascunho com prioridade calculada pelo código e só cria depois da confirmação", async () => {
     const first = await turn("Só eu. Tenho reunião com um cliente às 14h.", [
       [{ tool: "preparar_rascunho_chamado", args: { ...VPN_DRAFT, ignorarPossiveisDuplicados: false } }],
@@ -92,7 +102,7 @@ describe("abertura de chamado com rascunho e confirmação", () => {
 
   it("barreira: não deixa o modelo montar e confirmar o rascunho no mesmo turno", async () => {
     let draftId = "";
-    const { agentMsg } = await turn("Abre um chamado da VPN pra mim, reunião às 14h", [
+    const { agentMsg } = await turn("Abre um chamado da VPN pra mim, só eu, reunião às 14h", [
       [{ tool: "preparar_rascunho_chamado", args: { ...VPN_DRAFT, ignorarPossiveisDuplicados: true } }],
       async () => {
         draftId = (await env.store.require(conversation.id)).pendingAction?.id ?? "";
@@ -108,7 +118,7 @@ describe("abertura de chamado com rascunho e confirmação", () => {
   });
 
   it("sem duplicidade: avisa quando já existe chamado aberto na mesma categoria", async () => {
-    const { agentMsg } = await turn("Meu notebook está muito lento", [
+    const { agentMsg } = await turn("Meu notebook está muito lento, só comigo", [
       [
         {
           tool: "preparar_rascunho_chamado",

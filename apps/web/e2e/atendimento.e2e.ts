@@ -21,6 +21,8 @@ test("funcionária abre um chamado, pede um analista e recebe a resposta dele", 
   await expect(ana.getByRole("heading", { name: "Olá, Ana. Como posso ajudar?" })).toBeVisible();
 
   await send(ana, "O Excel fecha sozinho quando abro planilhas grandes");
+  await expect(ana.getByText("Quem está sendo afetado?")).toBeVisible();
+  await ana.getByRole("button", { name: "Só eu" }).click();
   await expect(ana.getByText("Excel fecha sozinho ao abrir planilhas grandes").first()).toBeVisible();
   await expect(ana.getByText(/média/i).first()).toBeVisible();
 

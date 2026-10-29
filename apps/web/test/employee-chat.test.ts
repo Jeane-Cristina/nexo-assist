@@ -28,7 +28,7 @@ afterEach(() => env.cleanup());
 async function withDraft() {
   const { conversation } = await loadChat(env.deps(scriptedModel([]).model), anaSession);
   const model = scriptedModel([[{ tool: "preparar_rascunho_chamado", args: VPN_DRAFT }], [decision("abrir_chamado", 0.9)], "Confira o rascunho."]).model;
-  const result = await sendMessage(env.deps(model), anaSession, { conversationId: conversation.id, text: "VPN com erro 809, reunião hoje" });
+  const result = await sendMessage(env.deps(model), anaSession, { conversationId: conversation.id, text: "VPN com erro 809, só eu, reunião hoje" });
   const pending = result.conversation.pendingAction!;
   return { conversation: result.conversation, pending, deps: env.deps(scriptedModel([]).model) };
 }

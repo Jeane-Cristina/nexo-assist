@@ -21,7 +21,11 @@ async function say(text: string) {
 }
 
 it("modo demonstração: rascunho, confirmação e transferência sem chamar IA", async () => {
-  const draft = await say("O Excel fecha sozinho com planilhas grandes");
+  const question = await say("O Excel fecha sozinho com planilhas grandes");
+  expect(question.meta.quickReplies).toContain("Só eu");
+  expect(conversation.pendingAction).toBeNull();
+
+  const draft = await say("Só eu");
   expect(draft.meta.decision?.intent).toBe("abrir_chamado");
   expect(conversation.pendingAction?.kind).toBe("create");
 

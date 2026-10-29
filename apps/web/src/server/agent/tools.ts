@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { Intent, TransferReason, type Conversation } from "../conversations/types";
+import { Intent, TransferReason, type Conversation, type Message } from "../conversations/types";
 import { formatAgo, formatDayTime, formatDeadline } from "../format";
 import { ServiceDesk, toTicketSummary } from "../service-desk";
 import { TicketsError, type Actor, type TicketsClient } from "../tickets/client";
@@ -15,7 +15,17 @@ export type ToolDeps = {
   desk: ServiceDesk;
   recorder: TurnRecorder;
   clock: () => Date;
+  history?: Message[];
 };
+
+const IMPACT_ANSWER =
+  /\b(s[óo]|apenas|somente)\s+(eu|comigo|a mim|o meu|a minha|no meu|na minha)\b|\bequipe\b|\bmeu time\b|\bo time\b|\bsetor\b|\bdepartamento\b|\btodo mundo\b|\btodos\b|\bempresa\b|\bningu[ée]m\b|\bn[ãa]o sei\b|\boutr[oa]s? (colegas|pessoas)\b|\bmais (gente|pessoas|algu[ée]m)\b/i;
+
+export function impactWasDiscussed(history: Message[]): boolean {
+  return history.some(
+    (m) => (m.role === "employee" && IMPACT_ANSWER.test(m.content)) || (m.role === "agent" && /afetad/i.test(m.content)),
+  );
+}
 
 type ToolFailure = { ok: false; erro: string; mensagem: string };
 
@@ -147,6 +157,16 @@ export function createAgentTools(deps: ToolDeps) {
         .describe("true somente depois que o funcionário disse que NÃO é o mesmo problema dos chamados parecidos"),
     }),
     execute: async (input) => {
+      if (deps.history && !impactWasDiscussed(deps.history)) {
+        recorder.guardrail("Bloqueado: o agent tentou montar o rascunho sem saber quem é afetado.");
+        recorder.rule("Prioridade: antes do rascunho é preciso saber quem é afetado, porque o impacto define a prioridade.");
+        return {
+          ok: false as const,
+          erro: "falta_quem_e_afetado",
+          mensagem:
+            "Ainda não sei quem é afetado. Pergunte só isso agora, com as opções rápidas \"Só eu\", \"Minha equipe\", \"Toda a empresa\", \"Não sei\". Não monte o rascunho neste turno.",
+        };
+      }
       try {
         if (!input.ignorarPossiveisDuplicados) {
           const all = await tickets.listTickets(actor, { scope: "all" });
